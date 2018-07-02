@@ -24,6 +24,15 @@ class TestDiskBalance(Tester):
     @jira_ticket CASSANDRA-6696
     """
 
+    @pytest.fixture(scope='function', autouse=True)
+    def fixture_set_cluster_settings(self, fixture_dtest_setup):
+        cluster = fixture_dtest_setup.cluster
+        cluster.schema_event_refresh_window = 0
+
+        # CASSANDRA-14556 should be disabled if you need directories to be perfectly balanced.
+        if cluster.version() >= '4.0':
+            cluster.set_configuration_options({'streaming_zerocopy_sstables_enabled': 'false'})
+
     def test_disk_balance_stress(self):
         cluster = self.cluster
         if self.dtest_config.use_vnodes:
@@ -42,6 +51,7 @@ class TestDiskBalance(Tester):
         cluster = self.cluster
         if self.dtest_config.use_vnodes:
             cluster.set_configuration_options(values={'num_tokens': 256})
+
         # apparently we have legitimate errors in the log when bootstrapping (see bootstrap_test.py)
         self.fixture_dtest_setup.allow_log_errors = True
         cluster.populate(4).start(wait_for_binary_proto=True)
