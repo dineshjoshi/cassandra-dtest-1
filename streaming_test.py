@@ -3,12 +3,22 @@ import operator
 
 import pytest
 from cassandra import ConsistencyLevel
+from pytest import mark
 
 from dtest import Tester, create_ks, create_cf
 from tools.data import insert_c1c2
 
 since = pytest.mark.since
 logger = logging.getLogger(__name__)
+
+opmap = {
+    operator.eq: "==",
+    operator.gt: ">",
+    operator.lt: "<",
+    operator.ne: "!=",
+    operator.ge: ">=",
+    operator.le: "<="
+}
 
 
 class TestStreaming(Tester):
@@ -26,7 +36,7 @@ class TestStreaming(Tester):
         )
 
     def _test_streaming(self, op_zerocopy, op_partial, num_partial, num_zerocopy,
-                        compaction_strategy='SizeTieredCompactionStrategy', num_keys=1000, rf=3, num_nodes=3):
+                        compaction_strategy='LeveledCompactionStrategy', num_keys=1000, rf=3, num_nodes=3):
         keys = num_keys
 
         cluster = self.cluster
@@ -64,23 +74,30 @@ class TestStreaming(Tester):
             nodes[1].grep_log('.*CassandraStreamReader.*?Finished receiving file.*', filename='debug.log',
                               from_mark=mark))
 
-        assert op_zerocopy(zerocopy_streamed_sstable, num_zerocopy)
-        assert op_partial(partial_streamed_sstable, num_partial)
+        assert op_zerocopy(zerocopy_streamed_sstable, num_zerocopy), "%s %s %s" % (num_zerocopy, opmap.get(op_zerocopy),
+                                                                                   zerocopy_streamed_sstable)
+        assert op_partial(partial_streamed_sstable, num_partial), "%s %s %s" % (num_partial, op_partial,
+                                                                                partial_streamed_sstable)
 
     @since('4.0')
     def test_zerocopy_streaming(self):
         self._test_streaming(op_zerocopy=operator.gt, op_partial=operator.eq, num_zerocopy=1, num_partial=0,
-                             compaction_strategy='LeveledCompactionStrategy', num_nodes=2, rf=2)
+                             num_nodes=2, rf=2)
 
     @since('4.0')
     def test_zerocopy_streaming_leveled_compaction(self):
-        self._test_streaming(op_zerocopy=operator.gt, op_partial=operator.gt, num_zerocopy=1, num_partial=1, rf=2,
-                             compaction_strategy='LeveledCompactionStrategy')
+        self._test_streaming(op_zerocopy=operator.gt, op_partial=operator.gt, num_zerocopy=1, num_partial=1, rf=2)
 
+    @mark.xfail(reason="Not implemented yet. Should be functional after CASSANDRA-10540, CASSANDRA-14586 are fixed.")
     @since('4.0')
     def test_zerocopy_streaming_size_tiered_compaction(self):
         self._test_streaming(op_zerocopy=operator.gt, op_partial=operator.gt, num_zerocopy=1, num_partial=1, rf=2,
-                             num_nodes=3)
+                             num_nodes=3, compaction_strategy='SizeTieredCompactionStrategy')
+
+    @since('4.0')
+    def test_stcs_does_not_trigger_zerocopy_streaming(self):
+        self._test_streaming(op_zerocopy=operator.eq, op_partial=operator.gt, num_zerocopy=0, num_partial=1, rf=2,
+                             num_nodes=3, compaction_strategy='SizeTieredCompactionStrategy')
 
     @since('4.0')
     def test_zerocopy_streaming_no_replication(self):
