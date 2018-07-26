@@ -68,7 +68,7 @@ class TestStreaming(Tester):
 
         nodes[1].watch_log_for('Completed submission of build tasks', filename='debug.log', timeout=120)
         zerocopy_streamed_sstable = len(
-            nodes[1].grep_log('.*CassandraBlockStreamReader.*?Finished receiving file Data.*', filename='debug.log',
+            nodes[1].grep_log('.*CassandraBlockStreamReader.*?Finished receiving Data.*', filename='debug.log',
                               from_mark=mark))
         partial_streamed_sstable = len(
             nodes[1].grep_log('.*CassandraStreamReader.*?Finished receiving file.*', filename='debug.log',
