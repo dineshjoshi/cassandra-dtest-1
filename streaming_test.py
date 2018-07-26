@@ -95,11 +95,6 @@ class TestStreaming(Tester):
                              num_nodes=3, compaction_strategy='SizeTieredCompactionStrategy')
 
     @since('4.0')
-    def test_stcs_does_not_trigger_zerocopy_streaming(self):
-        self._test_streaming(op_zerocopy=operator.eq, op_partial=operator.gt, num_zerocopy=0, num_partial=1, rf=2,
-                             num_nodes=3, compaction_strategy='SizeTieredCompactionStrategy')
-
-    @since('4.0')
     def test_zerocopy_streaming_no_replication(self):
         self._test_streaming(op_zerocopy=operator.eq, op_partial=operator.eq, num_zerocopy=0, num_partial=0, rf=1,
                              num_nodes=3)
