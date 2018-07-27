@@ -31,7 +31,7 @@ class TestDiskBalance(Tester):
 
         # CASSANDRA-14556 should be disabled if you need directories to be perfectly balanced.
         if cluster.version() >= '4.0':
-            cluster.set_configuration_options({'streaming_zerocopy_sstables_enabled': 'false'})
+            cluster.set_configuration_options({'streaming_zero_copy_sstables_enabled': 'false'})
 
     def test_disk_balance_stress(self):
         cluster = self.cluster
