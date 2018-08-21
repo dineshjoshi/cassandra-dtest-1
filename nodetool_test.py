@@ -1,4 +1,6 @@
 import os
+
+import cassandra
 import pytest
 import re
 import logging
@@ -394,3 +396,23 @@ class TestNodetool(Tester):
         assert 'ks1 -> Replication class: NetworkTopologyStrategy {dc2=5, dc1=3, dc3=1}' in out_node1_dc1
         assert 'ks2 -> Replication class: NetworkTopologyStrategy {dc2=5, dc1=3, dc3=1}' in out_node1_dc1
         assert 'Cluster Information:' in out_node1_dc1
+
+    @since('4.0')
+    def test_allow_older_protocols(self):
+        cluster = self.cluster
+        cluster.populate(2)
+        node = cluster.nodelist()[0]
+        cluster.start()
+
+        session = self.patient_cql_connection(node=node, protocol_version=4)
+        assert session.execute("SELECT * FROM system_schema.keyspaces;") is not None
+
+        node.nodetool('disableoldprotocolversions')
+
+        with pytest.raises(cassandra.cluster.NoHostAvailable):
+            session = self.patient_cql_connection(node=node, protocol_version=3)
+            session.execute("SELECT * FROM system_schema.keyspaces;")
+
+        node.nodetool('enableoldprotocolversions')
+        session = self.patient_cql_connection(node=node, protocol_version=3)
+        assert session.execute("SELECT * FROM system_schema.keyspaces;") is not None
