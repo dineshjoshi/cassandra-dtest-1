@@ -413,6 +413,12 @@ class TestNodetool(Tester):
             session = self.patient_cql_connection(node=node, protocol_version=3)
             session.execute("SELECT * FROM system_schema.keyspaces;")
 
+        session = self.patient_cql_connection(node=node, protocol_version=4)
+        assert session.execute("SELECT * FROM system_schema.keyspaces;") is not None
+
         node.nodetool('enableoldprotocolversions')
         session = self.patient_cql_connection(node=node, protocol_version=3)
+        assert session.execute("SELECT * FROM system_schema.keyspaces;") is not None
+
+        session = self.patient_cql_connection(node=node, protocol_version=4)
         assert session.execute("SELECT * FROM system_schema.keyspaces;") is not None
