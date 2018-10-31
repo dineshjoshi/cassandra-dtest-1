@@ -83,6 +83,9 @@ class UpgradeTester(Tester, metaclass=ABCMeta):
 
         cluster = self.cluster
 
+        cluster.set_install_dir(version=self.UPGRADE_PATH.starting_version)
+        self.fixture_dtest_setup.reinitialize_cluster_for_different_version()
+
         if ordered:
             cluster.set_partitioner("org.apache.cassandra.dht.ByteOrderedPartitioner")
 
@@ -100,7 +103,6 @@ class UpgradeTester(Tester, metaclass=ABCMeta):
 
         cluster.populate(nodes)
         node1 = cluster.nodelist()[0]
-        cluster.set_install_dir(version=self.UPGRADE_PATH.starting_version)
         self.fixture_dtest_setup.enable_for_jolokia = kwargs.pop('jolokia', False)
         if self.fixture_dtest_setup.enable_for_jolokia:
             remove_perf_disable_shared_mem(node1)
@@ -131,7 +133,8 @@ class UpgradeTester(Tester, metaclass=ABCMeta):
         node1 = self.cluster.nodelist()[0]
         node2 = self.cluster.nodelist()[1]
 
-        # stop the nodes
+        # stop the nodes, this can fail due to https://issues.apache.org/jira/browse/CASSANDRA-8220 on MacOS
+        # for the tests that run against 2.0. You will need to run those in Linux.
         node1.drain()
         node1.stop(gently=True)
 
@@ -165,7 +168,7 @@ class UpgradeTester(Tester, metaclass=ABCMeta):
         node1.set_log_level(logging.getLevelName(logging.root.level))
         node1.set_configuration_options(values={'internode_compression': 'none'})
 
-        if use_thrift:
+        if use_thrift and node1.get_cassandra_version() < '4':
             node1.set_configuration_options(values={'start_rpc': 'true'})
 
         if self.fixture_dtest_setup.enable_for_jolokia:
@@ -245,3 +248,19 @@ class UpgradeTester(Tester, metaclass=ABCMeta):
              '')
         )
         assert self.UPGRADE_PATH is not None, no_upgrade_path_error
+
+    def upgrade_version_string(self):
+        """
+        Returns a hopefully useful version string that can be compared
+        to tune test behavior. For trunk this returns trunk, for an earlier
+        version like github:apache/cassandra-3.11 it returns a version number
+        as a string
+        :return:
+        """
+        version_string = self.UPGRADE_PATH.upgrade_version
+        if version_string.startswith('github'):
+            version_string = version_string.partition('/')[2]
+        if "-" in version_string:
+            version_string = version_string.partition('-')[2]
+        return version_string
+

@@ -236,6 +236,7 @@ class Tester:
     def set_dtest_setup_on_function(self, fixture_dtest_setup):
         self.fixture_dtest_setup = fixture_dtest_setup
         self.dtest_config = fixture_dtest_setup.dtest_config
+        return None
 
     def set_node_to_current_version(self, node):
         version = os.environ.get('CASSANDRA_VERSION')
@@ -454,12 +455,12 @@ def run_scenarios(scenarios, handler, deferred_exceptions=tuple()):
         try:
             handler(scenario)
         except deferred_exceptions as e:
-            tracebacks.append(traceback.format_exc(sys.exc_info()))
+            tracebacks.append(traceback.format_exc())
             errors.append(type(e)('encountered {} {} running scenario:\n  {}\n'.format(e.__class__.__name__, str(e), scenario)))
             logger.debug("scenario {}/{} encountered a deferrable exception, continuing".format(i, len(scenarios)))
         except Exception as e:
             # catch-all for any exceptions not intended to be deferred
-            tracebacks.append(traceback.format_exc(sys.exc_info()))
+            tracebacks.append(traceback.format_exc())
             errors.append(type(e)('encountered {} {} running scenario:\n  {}\n'.format(e.__class__.__name__, str(e), scenario)))
             logger.debug("scenario {}/{} encountered a non-deferrable exception, aborting".format(i, len(scenarios)))
             raise MultiError(errors, tracebacks)

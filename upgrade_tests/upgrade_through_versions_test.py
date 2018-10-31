@@ -19,9 +19,10 @@ from cassandra.query import SimpleStatement
 from dtest import RUN_STATIC_UPGRADE_MATRIX, Tester
 from tools.misc import generate_ssl_stores, new_node
 from .upgrade_base import switch_jdks
-from .upgrade_manifest import (build_upgrade_pairs, current_2_0_x,
+from .upgrade_manifest import (build_upgrade_pairs,
                               current_2_1_x, current_2_2_x, current_3_0_x,
-                              indev_2_2_x, indev_3_x)
+                              indev_2_2_x, indev_3_x,
+                              current_3_x, indev_trunk)
 
 logger = logging.getLogger(__name__)
 
@@ -350,6 +351,7 @@ class TestUpgrade(Tester):
                           (num + 1, len(self.cluster.nodelist()), version_meta.version))
 
                 self.cluster.set_install_dir(version=version_meta.version)
+                self.fixture_dtest_setup.reinitialize_cluster_for_different_version()
 
             # Stop write processes
             write_proc.terminate()
@@ -367,6 +369,7 @@ class TestUpgrade(Tester):
 
                 self.upgrade_to_version(version_meta, internode_ssl=internode_ssl)
                 self.cluster.set_install_dir(version=version_meta.version)
+                self.fixture_dtest_setup.reinitialize_cluster_for_different_version()
 
                 self._check_values()
                 self._check_counters()
@@ -629,7 +632,7 @@ class TestUpgrade(Tester):
             if fail_count > 100:
                 break
 
-        assert fail_count, 100 < "Too many counter increment failures"
+        assert fail_count < 100, "Too many counter increment failures"
 
     def _check_counters(self):
         logger.debug("Checking counter values...")
@@ -791,15 +794,6 @@ def create_upgrade_class(clsname, version_metas, protocol_version,
 MultiUpgrade = namedtuple('MultiUpgrade', ('name', 'version_metas', 'protocol_version', 'extra_config'))
 
 MULTI_UPGRADES = (
-    # Proto v1 upgrades (v1 supported on 2.0, 2.1, 2.2)
-    MultiUpgrade(name='ProtoV1Upgrade_AllVersions_EndsAt_indev_2_2_x',
-                 version_metas=[current_2_0_x, current_2_1_x, indev_2_2_x], protocol_version=1, extra_config=None),
-    MultiUpgrade(name='ProtoV1Upgrade_AllVersions_RandomPartitioner_EndsAt_indev_2_2_x',
-                 version_metas=[current_2_0_x, current_2_1_x, indev_2_2_x], protocol_version=1,
-                 extra_config=(
-                     ('partitioner', 'org.apache.cassandra.dht.RandomPartitioner'),
-                 )),
-
     # Proto v2 upgrades (v2 is supported on 2.0, 2.1, 2.2)
     MultiUpgrade(name='ProtoV2Upgrade_AllVersions_EndsAt_indev_2_2_x',
                  version_metas=[current_2_0_x, current_2_1_x, indev_2_2_x], protocol_version=2, extra_config=None),
@@ -820,9 +814,17 @@ MULTI_UPGRADES = (
 
     # Proto v4 upgrades (v4 is supported on 2.2, 3.0, 3.1, trunk)
     MultiUpgrade(name='ProtoV4Upgrade_AllVersions_EndsAt_Trunk_HEAD',
-                 version_metas=[current_2_2_x, current_3_0_x, indev_3_x], protocol_version=4, extra_config=None),
+                 version_metas=[current_2_2_x, current_3_0_x, indev_3_x, ], protocol_version=4, extra_config=None),
     MultiUpgrade(name='ProtoV4Upgrade_AllVersions_RandomPartitioner_EndsAt_Trunk_HEAD',
                  version_metas=[current_2_2_x, current_3_0_x, indev_3_x], protocol_version=4,
+                 extra_config=(
+                     ('partitioner', 'org.apache.cassandra.dht.RandomPartitioner'),
+                 )),
+    # Proto v5 upgrades (v5 is supported on 3.0, 3.11, trunk)
+    MultiUpgrade(name='ProtoV5Upgrade_AllVersions_EndsAt_Trunk_HEAD',
+                 version_metas=[current_3_0_x, current_3_x, indev_trunk], protocol_version=5, extra_config=None),
+    MultiUpgrade(name='ProtoV5Upgrade_AllVersions_RandomPartitioner_EndsAt_Trunk_HEAD',
+                 version_metas=[current_3_0_x, current_3_x, indev_trunk], protocol_version=5,
                  extra_config=(
                      ('partitioner', 'org.apache.cassandra.dht.RandomPartitioner'),
                  )),

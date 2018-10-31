@@ -1,8 +1,12 @@
 import logging
+import os
 
 from collections import namedtuple
 
 from dtest import RUN_STATIC_UPGRADE_MATRIX
+
+import ccmlib.repository
+from ccmlib.common import get_version_from_build
 
 logger = logging.getLogger(__name__)
 
@@ -10,16 +14,32 @@ logger = logging.getLogger(__name__)
 # They also contain VersionMeta's for each version the path is testing
 UpgradePath = namedtuple('UpgradePath', ('name', 'starting_version', 'upgrade_version', 'starting_meta', 'upgrade_meta'))
 
+VERSION_FAMILY = None
 
-def _get_version_family():
+
+def set_version_family(config):
     """
     Detects the version family (line) using dtest.py:CASSANDRA_VERSION_FROM_BUILD
     """
     # todo CASSANDRA-14421
     # current_version = CASSANDRA_VERSION_FROM_BUILD
-    current_version = '4.0'
+    # There are times when we want to know the C* version we're testing against
+    # before we call Tester.setUp. In the general case, we can't know that -- the
+    # test method could use any version it wants for self.cluster. However, we can
+    # get the version from build.xml in the C* repository specified by
+    # CASSANDRA_VERSION or CASSANDRA_DIR. This should use the same resolution
+    # strategy as the actual checkout code in Tester.setUp; if it does not, that is
+    # a bug.
+    cassandra_version_slug = config.getoption("--cassandra-version")
+    cassandra_dir = config.getoption("--cassandra-dir")
+    # Prefer CASSANDRA_VERSION if it's set in the environment. If not, use CASSANDRA_DIR
+    if cassandra_version_slug:
+        # fetch but don't build the specified C* version
+        ccm_repo_cache_dir, _ = ccmlib.repository.setup(cassandra_version_slug)
+        current_version = get_version_from_build(ccm_repo_cache_dir)
+    else:
+        current_version = get_version_from_build(cassandra_dir)
 
-    version_family = 'unknown'
     if current_version.vstring.startswith('2.0'):
         version_family = '2.0.x'
     elif current_version.vstring.startswith('2.1'):
@@ -36,10 +56,9 @@ def _get_version_family():
         # when this occurs, it's time to update this manifest a bit!
         raise RuntimeError("4.1+ not yet supported on upgrade tests!")
 
-    return version_family
-
-
-VERSION_FAMILY = _get_version_family()
+    global VERSION_FAMILY
+    VERSION_FAMILY = version_family
+    logger.info("Setting version family to %s\n" % VERSION_FAMILY)
 
 
 class VersionMeta(namedtuple('_VersionMeta', ('name', 'family', 'variant', 'version', 'min_proto_v', 'max_proto_v', 'java_versions'))):
@@ -70,22 +89,19 @@ class VersionMeta(namedtuple('_VersionMeta', ('name', 'family', 'variant', 'vers
         return self
 
 
-indev_2_0_x = None  # None if release not likely
-current_2_0_x = VersionMeta(name='current_2_0_x', family='2.0.x', variant='current', version='2.0.17', min_proto_v=1, max_proto_v=2, java_versions=(7,))
-
 indev_2_1_x = VersionMeta(name='indev_2_1_x', family='2.1.x', variant='indev', version='github:apache/cassandra-2.1', min_proto_v=1, max_proto_v=3, java_versions=(7, 8))
-current_2_1_x = VersionMeta(name='current_2_1_x', family='2.1.x', variant='current', version='2.1.17', min_proto_v=1, max_proto_v=3, java_versions=(7, 8))
+current_2_1_x = VersionMeta(name='current_2_1_x', family='2.1.x', variant='current', version='2.1.20', min_proto_v=1, max_proto_v=3, java_versions=(7, 8))
 
 indev_2_2_x = VersionMeta(name='indev_2_2_x', family='2.2.x', variant='indev', version='github:apache/cassandra-2.2', min_proto_v=1, max_proto_v=4, java_versions=(7, 8))
-current_2_2_x = VersionMeta(name='current_2_2_x', family='2.2.x', variant='current', version='2.2.9', min_proto_v=1, max_proto_v=4, java_versions=(7, 8))
+current_2_2_x = VersionMeta(name='current_2_2_x', family='2.2.x', variant='current', version='2.2.13', min_proto_v=1, max_proto_v=4, java_versions=(7, 8))
 
-indev_3_0_x = VersionMeta(name='indev_3_0_x', family='3.0.x', variant='indev', version='github:apache/cassandra-3.0', min_proto_v=3, max_proto_v=4, java_versions=(8,))
-current_3_0_x = VersionMeta(name='current_3_0_x', family='3.0.x', variant='current', version='3.0.12', min_proto_v=3, max_proto_v=4, java_versions=(8,))
+indev_3_0_x = VersionMeta(name='indev_3_0_x', family='3.0.x', variant='indev', version='github:aweisberg/cassandra-3.0', min_proto_v=3, max_proto_v=4, java_versions=(8,))
+current_3_0_x = VersionMeta(name='current_3_0_x', family='3.0.x', variant='current', version='github:aweisberg/cassandra-3.0', min_proto_v=3, max_proto_v=4, java_versions=(8,))
 
-indev_3_x = VersionMeta(name='indev_3_x', family='3.x', variant='indev', version='github:apache/cassandra-3.11', min_proto_v=3, max_proto_v=4, java_versions=(8,))
-current_3_x = VersionMeta(name='current_3_x', family='3.x', variant='current', version='3.10', min_proto_v=3, max_proto_v=4, java_versions=(8,))
+indev_3_x = VersionMeta(name='indev_3_x', family='3.x', variant='indev', version='github:aweisberg/cassandra-3.11', min_proto_v=3, max_proto_v=4, java_versions=(8,))
+current_3_x = VersionMeta(name='current_3_x', family='3.x', variant='current', version='github:aweisberg/cassandra-3.11', min_proto_v=3, max_proto_v=4, java_versions=(8,))
 
-indev_trunk = VersionMeta(name='indev_trunk', family='trunk', variant='indev', version='github:apache/trunk', min_proto_v=3, max_proto_v=4, java_versions=(8,))
+indev_trunk = VersionMeta(name='indev_trunk', family='trunk', variant='indev', version='github:aweisberg/14421-trunk', min_proto_v=4, max_proto_v=5, java_versions=(8,))
 
 
 # MANIFEST maps a VersionMeta representing a line/variant to a list of other VersionMeta's representing supported upgrades
@@ -96,9 +112,6 @@ indev_trunk = VersionMeta(name='indev_trunk', family='trunk', variant='indev', v
 #   3) Nodes upgraded to version B can read data stored by the predecessor version A, and from a data standpoint will function the same as if they always ran version B.
 #   4) If a new sstable format is present in version B, writes will occur in that format after upgrade. Running sstableupgrade on version B will proactively convert version A sstables to version B.
 MANIFEST = {
-    indev_2_0_x: [indev_2_1_x, current_2_1_x],
-    current_2_0_x: [indev_2_0_x, indev_2_1_x, current_2_1_x],
-
     indev_2_1_x: [indev_2_2_x, current_2_2_x, indev_3_0_x, current_3_0_x, indev_3_x, current_3_x],
     current_2_1_x: [indev_2_1_x, indev_2_2_x, current_2_2_x, indev_3_0_x, current_3_0_x, indev_3_x, current_3_x],
 

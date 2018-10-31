@@ -18,7 +18,7 @@ LEGACY_SSTABLES_JVM_ARGS = ["-Dcassandra.streamdes.initial_mem_buffer_size=1",
 @since('3.0', max_version='4')
 class TestUpgradeRepair(BaseRepairTest):
 
-    @since('3.0')
+    @since('3.0', max_version='4')
     def test_repair_after_upgrade(self):
         """
         @jira_ticket CASSANDRA-10990

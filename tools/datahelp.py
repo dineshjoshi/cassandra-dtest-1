@@ -22,9 +22,11 @@ It's meant to be used in tests when comparing expected to actual data, for valid
 For more examples reference paging_test.py
 """
 import re
+import logging
 
 from cassandra.concurrent import execute_concurrent_with_args
 
+logger = logging.getLogger(__name__)
 
 def strip(val):
     # remove spaces and pipes from beginning/end
