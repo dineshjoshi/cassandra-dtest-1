@@ -97,7 +97,9 @@ def list_to_hashed_dict(list):
                 normalized_list.append(tmp_list)
             else:
                 normalized_list.append(item)
-        list_digest = hashlib.sha256(str(normalized_list).encode('utf-8', 'ignore')).hexdigest()
+        list_str = str(normalized_list)
+        utf8 = list_str.encode('utf-8', 'ignore')
+        list_digest = hashlib.sha256(utf8).hexdigest()
         hashed_dict[list_digest] = normalized_list
     return hashed_dict
 
