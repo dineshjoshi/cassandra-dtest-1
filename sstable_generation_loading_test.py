@@ -167,7 +167,7 @@ class TestBaseSStableLoader(Tester):
             session.execute("UPDATE counter1 SET v=v+1 WHERE KEY='{}'".format(i))
 
         #Will upgrade to a version that doesn't support compact storage so revert the compact
-        #storage
+        #storage, this doesn't actually fix it yet
         if self.compact() and default_install_version >= '4':
             session.execute('alter table standard1 drop compact storage');
             session.execute('alter table counter1 drop compact storage');

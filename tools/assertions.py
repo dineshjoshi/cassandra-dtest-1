@@ -352,7 +352,5 @@ def assert_lists_of_dicts_equal(list1, list2):
     for adict, bdict in zip(list1, list2):
         assert(len(adict) == len(bdict))
         for key, value in adict.items():
-            if not key in bdict:
-                print ("shit")
             assert key in bdict
             assert bdict[key] == value

@@ -2,9 +2,6 @@ import time
 
 from tools.datahelp import flatten_into_set
 from tools.misc import list_to_hashed_dict
-import logging
-
-logger = logging.getLogger(__name__)
 
 class Page(object):
     data = None

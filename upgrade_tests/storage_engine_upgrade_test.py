@@ -40,10 +40,8 @@ class TestStorageEngineUpgrade(Tester):
         # Forcing cluster version on purpose
         if self.dtest_config.cassandra_version_from_build >= '4':
             cluster.set_install_dir(version="git:cassandra-3.0")
-            self.fixture_dtest_setup.reinitialize_cluster_for_different_version()
         else:
             cluster.set_install_dir(version="git:cassandra-2.1")
-            self.fixture_dtest_setup.reinitialize_cluster_for_different_version()
         self.fixture_dtest_setup.reinitialize_cluster_for_different_version()
         cluster.populate(1).start()
 

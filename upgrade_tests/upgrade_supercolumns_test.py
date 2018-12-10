@@ -120,8 +120,8 @@ class TestSCUpgrade(Tester):
 
         session = self.patient_exclusive_cql_connection(node1)
 
-        self.verify_with_thrift()
         self.verify_with_cql(session)
+        self.verify_with_thrift()
 
         for version in upgrade_path:
             if version == 'git:cassandra-4.0' or version == 'git:trunk':
@@ -166,8 +166,6 @@ class TestSCUpgrade(Tester):
             if tag < "2.1":
                 if "memtable_allocation_type" in node.config_options:
                     node.config_options.__delitem__("memtable_allocation_type")
-
-
 
         # Restart nodes on new version
         for node in nodes:

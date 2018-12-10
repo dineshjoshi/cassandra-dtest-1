@@ -35,6 +35,7 @@ def _create_sparse_super_cf(name):
                            comparator_type='AsciiType',
                            subcomparator_type='AsciiType')
 
+
 def unpack(list):
     result_list = []
     for item_dict in list:
@@ -51,6 +52,7 @@ def unpack(list):
 
 
 def add_value(list):
+    """Helper for _validate_sparse_cql to modify expected results based"""
     for item in list:
         key = item.get('key', None)
         if key is None:
@@ -60,7 +62,7 @@ def add_value(list):
         item[value_key]=_i64(100)
 
 
-def _validate_sparse_cql(cursor, cf='sparse_super_1', column1='column1', col1='col1', col2='col2', key='key', is40=False):
+def _validate_sparse_cql(cursor, cf='sparse_super_1', column1='column1', col1='col1', col2='col2', key='key', is_version_4_or_greater=False):
     cursor.execute('use ks')
 
     result = unpack(list(cursor.execute("SELECT * FROM {}".format(cf))))
@@ -69,20 +71,20 @@ def _validate_sparse_cql(cursor, cf='sparse_super_1', column1='column1', col1='c
      {key: 'k1', column1: 'key2', col1: 200, col2: 300},
      {key: 'k2', column1: 'key1', col1: 200, col2: 300},
      {key: 'k2', column1: 'key2', col1: 200, col2: 300}]
-    if is40:
+    if is_version_4_or_greater:
         add_value(expected)
     assert_lists_of_dicts_equal(result, expected)
 
     result = unpack(list(cursor.execute("SELECT * FROM {} WHERE {} = 'k1'".format(cf, key))))
     expected =  [{key: 'k1', column1: 'key1', col1: 200, col2: 300},
                   {key: 'k1', column1: 'key2', col1: 200, col2: 300}]
-    if is40:
+    if is_version_4_or_greater:
         add_value(expected)
     assert_lists_of_dicts_equal(result, expected)
 
     result = unpack(list(cursor.execute("SELECT * FROM {} WHERE {} = 'k2' AND {} = 'key1'".format(cf, key, column1))))
     expected = [{key: 'k2', column1: 'key1', col1: 200, col2: 300}]
-    if is40:
+    if is_version_4_or_greater:
         add_value(expected)
     assert_lists_of_dicts_equal(result, expected)
 
@@ -107,14 +109,14 @@ def _validate_sparse_thrift(client, cf='sparse_super_1'):
         assert cosc.super_column.columns[2].value == _i64(100)
 
 
-def _validate_dense_cql(cursor, cf='dense_super_1', key='key', column1='column1', column2='column2', value='value', is40=False):
+def _validate_dense_cql(cursor, cf='dense_super_1', key='key', column1='column1', column2='column2', value='value', is_version_4_or_greater=False):
     cursor.execute('use ks')
 
     expected = [{key: 'k1', column1: 'key1', column2: 100, value: 'value1'},
                   {key: 'k1', column1: 'key2', column2: 100, value: 'value1'},
                   {key: 'k2', column1: 'key1', column2: 200, value: 'value2'},
                   {key: 'k2', column1: 'key2', column2: 200, value: 'value2'}]
-    if is40:
+    if is_version_4_or_greater:
         expected[0][100]='value1'
         expected[1][100]='value1'
         expected[2][200]='value2'
@@ -123,15 +125,13 @@ def _validate_dense_cql(cursor, cf='dense_super_1', key='key', column1='column1'
             del dict[value]
         for dict in expected:
             del dict[column2]
-    original_iterator = cursor.execute("SELECT * FROM {}".format(cf))
-    original_result = list(original_iterator)
-    result = unpack(original_result)
+    result = unpack(list(cursor.execute("SELECT * FROM {}".format(cf))))
     assert_lists_of_dicts_equal(result, expected)
 
     result = unpack(list(cursor.execute("SELECT * FROM {} WHERE {} = 'k1'".format(cf, key))))
     expected = [{key: 'k1', column1: 'key1', column2: 100, value: 'value1'},
                   {key: 'k1', column1: 'key2', column2: 100, value: 'value1'}]
-    if is40:
+    if is_version_4_or_greater:
         expected[0][100]='value1'
         expected[1][100]='value1'
         for dict in expected:
@@ -142,7 +142,7 @@ def _validate_dense_cql(cursor, cf='dense_super_1', key='key', column1='column1'
 
     result = unpack(list(cursor.execute("SELECT * FROM {} WHERE {} = 'k1' AND {} = 'key1'".format(cf, key, column1))))
     expected = [{key: 'k1', column1: 'key1', column2: 100, value: 'value1'}]
-    if is40:
+    if is_version_4_or_greater:
         expected[0][100]='value1'
         for dict in expected:
             del dict[value]
@@ -150,13 +150,13 @@ def _validate_dense_cql(cursor, cf='dense_super_1', key='key', column1='column1'
             del dict[column2]
     assert_lists_of_dicts_equal(result, expected)
 
-    if is40:
+    if is_version_4_or_greater:
         result = unpack(list(cursor.execute("SELECT * FROM {} WHERE {} = 'k1' AND {} = 'key1' AND \"\" CONTAINS KEY 100 ALLOW FILTERING".format(cf, key, column1, column2))))
     else:
         result = list(cursor.execute("SELECT * FROM {} WHERE {} = 'k1' AND {} = 'key1' AND {} = 100".format(cf, key, column1, column2)))
 
     expected = [{key: 'k1', column1: 'key1', column2: 100, value: 'value1'}]
-    if is40:
+    if is_version_4_or_greater:
         expected[0][100]='value1'
         for dict in expected:
             del dict[value]
@@ -257,8 +257,6 @@ class TestUpgradeSuperColumnsThrough(Tester):
         node.stop()
         if node.get_cassandra_version() < '4':
            node.set_configuration_options(values={'start_rpc': 'true'})
-        else:
-           node.set_configuration_options(values={'start_rpc': None}, delete_empty=True)
         node.start()
 
         cursor = self.patient_cql_connection(node, row_factory=dict_factory)
@@ -266,7 +264,7 @@ class TestUpgradeSuperColumnsThrough(Tester):
         if node.get_cassandra_version() < '4':
             client = get_thrift_client(host, port)
             _validate_dense_thrift(client, cf='dense_super_1')
-        _validate_dense_cql(cursor, cf='dense_super_1', is40=node.get_cassandra_version() >= '4')
+        _validate_dense_cql(cursor, cf='dense_super_1', is_version_4_or_greater=node.get_cassandra_version() >= '4')
 
     def test_dense_supercolumn(self):
         cluster = self.prepare()
@@ -306,8 +304,6 @@ class TestUpgradeSuperColumnsThrough(Tester):
         node.stop()
         if node.get_cassandra_version() < '4':
             node.set_configuration_options(values={'start_rpc': 'true'})
-        else:
-            node.set_configuration_options(values={'start_rpc': None}, delete_empty=True)
         node.start()
 
         if node.get_cassandra_version() < '4':
@@ -315,7 +311,7 @@ class TestUpgradeSuperColumnsThrough(Tester):
             _validate_dense_thrift(client, cf='dense_super_1')
 
         cursor = self.patient_cql_connection(node, row_factory=dict_factory)
-        _validate_dense_cql(cursor, cf='dense_super_1',  is40=node.get_cassandra_version() >= '4')
+        _validate_dense_cql(cursor, cf='dense_super_1', is_version_4_or_greater=node.get_cassandra_version() >= '4')
 
     def test_sparse_supercolumn(self):
         cluster = self.prepare()
@@ -354,24 +350,22 @@ class TestUpgradeSuperColumnsThrough(Tester):
         _validate_sparse_thrift(client, cf='sparse_super_2')
 
         self.set_node_to_current_version(node)
-        is40 = node.get_cassandra_version() >= '4'
+        is_version_4_or_greater = node.get_cassandra_version() >= '4'
         #4.0 doesn't support compact storage
-        if is40:
+        if is_version_4_or_greater:
             cursor.execute("ALTER TABLE ks.sparse_super_2 DROP COMPACT STORAGE;")
 
         node.stop()
-        if not is40:
+        if not is_version_4_or_greater:
             node.set_configuration_options(values={'start_rpc': 'true'})
-        else:
-            node.set_configuration_options(values={'start_rpc': None}, delete_empty=True)
         node.start()
 
-        if not is40:
+        if not is_version_4_or_greater:
             client = get_thrift_client(host, port)
             _validate_sparse_thrift(client, cf='sparse_super_2')
 
         cursor = self.patient_cql_connection(node, row_factory=dict_factory)
-        _validate_sparse_cql(cursor, cf='sparse_super_2', is40=is40)
+        _validate_sparse_cql(cursor, cf='sparse_super_2', is_version_4_or_greater=is_version_4_or_greater)
 
 
 @pytest.mark.upgrade_test
@@ -406,17 +400,17 @@ class TestThrift(UpgradeTester):
         _validate_dense_thrift(client)
 
         version_string = self.upgrade_version_string()
-        is40 = version_string == 'trunk' or version_string >= '4.0'
+        is_version_4_or_greater = version_string == 'trunk' or version_string >= '4.0'
         #4.0 doesn't support compact storage
-        if is40:
+        if is_version_4_or_greater:
             cursor.execute("ALTER TABLE ks.dense_super_1 DROP COMPACT STORAGE;")
 
         for is_upgraded, cursor in self.do_upgrade(cursor, row_factory=dict_factory, use_thrift=True):
             logger.debug("Querying {} node".format("upgraded" if is_upgraded else "old"))
-            if not is40:
+            if not is_version_4_or_greater:
                 client = get_thrift_client(host, port)
                 _validate_dense_thrift(client)
-            _validate_dense_cql(cursor, is40=is40)
+            _validate_dense_cql(cursor, is_version_4_or_greater=is_version_4_or_greater)
 
     def test_dense_supercolumn_with_renames(self):
         cursor = self.prepare(row_factory=dict_factory)
@@ -446,17 +440,17 @@ class TestThrift(UpgradeTester):
         _validate_dense_thrift(client, cf='dense_super_2')
 
         version_string = self.upgrade_version_string()
-        is40 = version_string == 'trunk' or version_string >= '4.0'
+        is_version_4_or_greater = version_string == 'trunk' or version_string >= '4.0'
         #4.0 doesn't support compact storage
-        if is40:
+        if is_version_4_or_greater:
             cursor.execute("ALTER TABLE ks.dense_super_2 DROP COMPACT STORAGE;")
 
         for is_upgraded, cursor in self.do_upgrade(cursor, row_factory=dict_factory, use_thrift=True):
             logger.debug("Querying {} node".format("upgraded" if is_upgraded else "old"))
-            if not is40:
+            if not is_version_4_or_greater:
                 client = get_thrift_client(host, port)
                 _validate_dense_thrift(client, cf='dense_super_2')
-            _validate_dense_cql(cursor, cf='dense_super_2', key='renamed_key', column1='renamed_column1', column2='renamed_column2', value='renamed_value', is40=is40)
+            _validate_dense_cql(cursor, cf='dense_super_2', key='renamed_key', column1='renamed_column1', column2='renamed_column2', value='renamed_value', is_version_4_or_greater=is_version_4_or_greater)
 
     def test_sparse_supercolumn_with_renames(self):
         cursor = self.prepare(row_factory=dict_factory)
@@ -474,6 +468,9 @@ class TestThrift(UpgradeTester):
         cf = _create_sparse_super_cf('sparse_super_1')
         client.system_add_column_family(cf)
 
+        #The alter after was failing claiming the column family didn't exist.
+        #This test is so slow and it's Thrift and going away "soon" and we
+        #Don't run it on every commit so just sleep
         import time
         time.sleep(5)
 
@@ -493,17 +490,17 @@ class TestThrift(UpgradeTester):
         _validate_sparse_cql(cursor, column1='renamed_column1', key='renamed_key')
 
         version_string = self.upgrade_version_string()
-        is40 = version_string == 'trunk' or version_string >= '4.0'
+        is_version_4_or_greater = version_string == 'trunk' or version_string >= '4.0'
         #4.0 doesn't support compact storage
-        if is40:
+        if is_version_4_or_greater:
             cursor.execute("ALTER TABLE ks.sparse_super_1 DROP COMPACT STORAGE;")
 
         for is_upgraded, cursor in self.do_upgrade(cursor, row_factory=dict_factory, use_thrift=True):
             logger.debug("Querying {} node".format("upgraded" if is_upgraded else "old"))
-            if not is40:
+            if not is_version_4_or_greater:
                 client = get_thrift_client(host, port)
                 _validate_sparse_thrift(client)
-            _validate_sparse_cql(cursor, column1='renamed_column1', key='renamed_key', is40=is40)
+            _validate_sparse_cql(cursor, column1='renamed_column1', key='renamed_key', is_version_4_or_greater=is_version_4_or_greater)
 
     def test_sparse_supercolumn(self):
         cursor = self.prepare(row_factory=dict_factory)
@@ -534,17 +531,17 @@ class TestThrift(UpgradeTester):
         _validate_sparse_cql(cursor, cf='sparse_super_2')
 
         version_string = self.upgrade_version_string()
-        is40 = version_string == 'trunk' or version_string >= '4.0'
+        is_version_4_or_greater = version_string == 'trunk' or version_string >= '4.0'
         #4.0 doesn't support compact storage
-        if is40:
+        if is_version_4_or_greater:
             cursor.execute("ALTER TABLE ks.sparse_super_2 DROP COMPACT STORAGE;")
 
         for is_upgraded, cursor in self.do_upgrade(cursor, row_factory=dict_factory, use_thrift=True):
             logger.debug("Querying {} node".format("upgraded" if is_upgraded else "old"))
-            if not is40:
+            if not is_version_4_or_greater:
                 client = get_thrift_client(host, port)
                 _validate_sparse_thrift(client, cf='sparse_super_2')
-            _validate_sparse_cql(cursor, cf='sparse_super_2', is40=is40)
+            _validate_sparse_cql(cursor, cf='sparse_super_2', is_version_4_or_greater=is_version_4_or_greater)
 
 
 topology_specs = [
