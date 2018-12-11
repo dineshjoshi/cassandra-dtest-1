@@ -70,7 +70,7 @@ class UpgradeTester(Tester, metaclass=ABCMeta):
         super(UpgradeTester, self).setUp()
 
     def prepare(self, ordered=False, create_keyspace=True, use_cache=False, use_thrift=False,
-                nodes=None, rf=None, protocol_version=None, cl=None, **kwargs):
+                nodes=None, rf=None, protocol_version=None, cl=None, extra_config_options=None, **kwargs):
         nodes = self.NODES if nodes is None else nodes
         rf = self.RF if rf is None else rf
 
@@ -100,6 +100,9 @@ class UpgradeTester(Tester, metaclass=ABCMeta):
             cluster.set_configuration_options(values={'start_rpc': True})
 
         cluster.set_configuration_options(values={'internode_compression': 'none'})
+
+        if extra_config_options:
+            cluster.set_configuration_options(values=extra_config_options)
 
         cluster.populate(nodes)
         node1 = cluster.nodelist()[0]
