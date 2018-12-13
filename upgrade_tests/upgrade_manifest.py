@@ -1,5 +1,4 @@
 import logging
-import os
 
 from collections import namedtuple
 
@@ -8,6 +7,8 @@ from dtest import RUN_STATIC_UPGRADE_MATRIX
 import ccmlib.repository
 from ccmlib.common import get_version_from_build
 
+from enum import Enum
+
 logger = logging.getLogger(__name__)
 
 # UpgradePath's contain data about upgrade paths we wish to test
@@ -15,9 +16,18 @@ logger = logging.getLogger(__name__)
 UpgradePath = namedtuple('UpgradePath', ('name', 'starting_version', 'upgrade_version', 'starting_meta', 'upgrade_meta'))
 
 VERSION_FAMILY = None
+CONFIG = None
 
+class VersionSelectionStrategies(Enum):
+    BOTH=lambda a, b : True
+    RELEASES=lambda a, b : not (a.version.startswith('git') or b.version.startswith('git'))
+    INDEV=lambda a, b : a.version.startswith('git') and b.version.startswith('git')
 
-def set_version_family(config):
+def set_config(config):
+    global CONFIG
+    CONFIG = config
+
+def set_version_family():
     """
     Detects the version family (line) using dtest.py:CASSANDRA_VERSION_FROM_BUILD
     """
@@ -30,8 +40,8 @@ def set_version_family(config):
     # CASSANDRA_VERSION or CASSANDRA_DIR. This should use the same resolution
     # strategy as the actual checkout code in Tester.setUp; if it does not, that is
     # a bug.
-    cassandra_version_slug = config.getoption("--cassandra-version")
-    cassandra_dir = config.getoption("--cassandra-dir")
+    cassandra_version_slug = CONFIG.getoption("--cassandra-version")
+    cassandra_dir = CONFIG.getoption("--cassandra-dir")
     # Prefer CASSANDRA_VERSION if it's set in the environment. If not, use CASSANDRA_DIR
     if cassandra_version_slug:
         # fetch but don't build the specified C* version
@@ -176,8 +186,13 @@ def build_upgrade_pairs():
     valid_upgrade_pairs = []
     manifest = OVERRIDE_MANIFEST or MANIFEST
 
+    version_select_strategy = VersionSelectionStrategies[CONFIG.getoption("--upgrade-version-selection").upper()]
+
     for origin_meta, destination_metas in list(manifest.items()):
         for destination_meta in destination_metas:
+            if not version_select_strategy(origin_meta, destination_meta):
+                continue;
+
             if not (origin_meta and destination_meta):  # None means we don't care about that version, which means we don't care about iterations involving it either
                 logger.debug("skipping class creation as a version is undefined (this is normal), versions: {} and {}".format(origin_meta, destination_meta))
                 continue
