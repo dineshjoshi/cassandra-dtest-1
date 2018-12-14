@@ -18,14 +18,35 @@ UpgradePath = namedtuple('UpgradePath', ('name', 'starting_version', 'upgrade_ve
 VERSION_FAMILY = None
 CONFIG = None
 
+
+def is_same_family_current_to_indev(origin, destination):
+    """
+    Within a version family it is useful to test that a prior release can upgrade to the indev version
+    """
+    return origin.family == destination.family and origin.variant == "current" and destination.variant == "indev"
+
+
 class VersionSelectionStrategies(Enum):
-    BOTH=lambda a, b : True
-    RELEASES=lambda a, b : not (a.version.startswith('git') or b.version.startswith('git'))
-    INDEV=lambda a, b : a.version.startswith('git') and b.version.startswith('git')
+    """
+    Test upgrading from indev -> indev, current -> current across versions, and current -> indev within a version
+    """
+    BOTH=(lambda origin, destination: (origin.variant == destination.variant) or is_same_family_current_to_indev(origin,destination))
+    """
+    Exclusively test in development branches so your bug fixes show up
+    """
+    INDEV=(lambda origin, destination: origin.variant == 'indev' and destination.variant == 'indev' or is_same_family_current_to_indev(origin, destination),)
+    """
+    Test upgrading from releases to the latest release as well as from the current release to the indev tip 
+    within the same version.
+    """
+    RELEASES=(lambda origin, destination: not VersionSelectionStrategies.INDEV.value[0](origin, destination) or is_same_family_current_to_indev(origin, destination),)
+
 
 def set_config(config):
     global CONFIG
     CONFIG = config
+    set_version_family()
+
 
 def set_version_family():
     """
@@ -160,23 +181,6 @@ def _have_common_proto(origin_meta, destination_meta):
     """
     return origin_meta.max_proto_v >= destination_meta.min_proto_v
 
-
-def _is_targeted_variant_combo(origin_meta, destination_meta):
-    """
-    Takes two VersionMeta objects, in order of test from start version to next version.
-    Returns a boolean indicating if this is a test pair we care about.
-
-    for now we only test upgrades of these types:
-      current -> in-dev (aka: released -> branch)
-    """
-    # if we're overriding the test manifest, we don't want to filter anything out
-    if OVERRIDE_MANIFEST:
-        return True
-
-    # is this an upgrade variant combination we care about?
-    return (origin_meta.variant == 'current' and destination_meta.variant == 'indev')
-
-
 def build_upgrade_pairs():
     """
     Using the manifest (above), builds a set of valid upgrades, according to current testing practices.
@@ -186,19 +190,16 @@ def build_upgrade_pairs():
     valid_upgrade_pairs = []
     manifest = OVERRIDE_MANIFEST or MANIFEST
 
-    version_select_strategy = VersionSelectionStrategies[CONFIG.getoption("--upgrade-version-selection").upper()]
+    configured_strategy = CONFIG.getoption("--upgrade-version-selection").upper()
+    version_select_strategy = VersionSelectionStrategies[configured_strategy].value[0]
 
     for origin_meta, destination_metas in list(manifest.items()):
         for destination_meta in destination_metas:
             if not version_select_strategy(origin_meta, destination_meta):
-                continue;
+                continue
 
             if not (origin_meta and destination_meta):  # None means we don't care about that version, which means we don't care about iterations involving it either
                 logger.debug("skipping class creation as a version is undefined (this is normal), versions: {} and {}".format(origin_meta, destination_meta))
-                continue
-
-            if not _is_targeted_variant_combo(origin_meta, destination_meta):
-                logger.debug("skipping class creation, no testing of '{}' to '{}' (for {} upgrade to {})".format(origin_meta.variant, destination_meta.variant, origin_meta.name, destination_meta.name))
                 continue
 
             if not _have_common_proto(origin_meta, destination_meta):
