@@ -671,7 +671,6 @@ class TestUpgrade(Tester):
         else:
             self.fail("Count query did not return")
 
-
 class BootstrapMixin(object):
     """
     Can be mixed into UpgradeTester or a subclass thereof to add bootstrap tests.
@@ -795,26 +794,26 @@ MultiUpgrade = namedtuple('MultiUpgrade', ('name', 'version_metas', 'protocol_ve
 
 MULTI_UPGRADES = (
     # Proto v3 upgrades (v3 is supported on 2.1, 2.2, 3.0, 3.1, trunk)
-    MultiUpgrade(name='ProtoV3Upgrade_AllVersions_EndsAt_Trunk_HEAD',
+    MultiUpgrade(name='TestProtoV3Upgrade_AllVersions_EndsAt_Trunk_HEAD',
                  version_metas=[current_2_1_x, current_2_2_x, current_3_0_x, indev_3_x], protocol_version=3, extra_config=None),
-    MultiUpgrade(name='ProtoV3Upgrade_AllVersions_RandomPartitioner_EndsAt_Trunk_HEAD',
+    MultiUpgrade(name='TestProtoV3Upgrade_AllVersions_RandomPartitioner_EndsAt_Trunk_HEAD',
                  version_metas=[current_2_1_x, current_2_2_x, current_3_0_x, indev_3_x], protocol_version=3,
                  extra_config=(
                      ('partitioner', 'org.apache.cassandra.dht.RandomPartitioner'),
                  )),
 
     # Proto v4 upgrades (v4 is supported on 2.2, 3.0, 3.1, trunk)
-    MultiUpgrade(name='ProtoV4Upgrade_AllVersions_EndsAt_Trunk_HEAD',
+    MultiUpgrade(name='TestProtoV4Upgrade_AllVersions_EndsAt_Trunk_HEAD',
                  version_metas=[current_2_2_x, current_3_0_x, indev_3_x, ], protocol_version=4, extra_config=None),
-    MultiUpgrade(name='ProtoV4Upgrade_AllVersions_RandomPartitioner_EndsAt_Trunk_HEAD',
+    MultiUpgrade(name='TestProtoV4Upgrade_AllVersions_RandomPartitioner_EndsAt_Trunk_HEAD',
                  version_metas=[current_2_2_x, current_3_0_x, indev_3_x], protocol_version=4,
                  extra_config=(
                      ('partitioner', 'org.apache.cassandra.dht.RandomPartitioner'),
                  )),
     # Proto v5 upgrades (v5 is supported on 3.0, 3.11, trunk)
-    MultiUpgrade(name='ProtoV5Upgrade_AllVersions_EndsAt_Trunk_HEAD',
+    MultiUpgrade(name='TestProtoV5Upgrade_AllVersions_EndsAt_Trunk_HEAD',
                  version_metas=[current_3_0_x, current_3_x, indev_trunk], protocol_version=5, extra_config=None),
-    MultiUpgrade(name='ProtoV5Upgrade_AllVersions_RandomPartitioner_EndsAt_Trunk_HEAD',
+    MultiUpgrade(name='TestProtoV5Upgrade_AllVersions_RandomPartitioner_EndsAt_Trunk_HEAD',
                  version_metas=[current_3_0_x, current_3_x, indev_trunk], protocol_version=5,
                  extra_config=(
                      ('partitioner', 'org.apache.cassandra.dht.RandomPartitioner'),

@@ -11,7 +11,7 @@ from thrift_bindings.thrift010.Cassandra import (Column, ColumnDef,
                                            SlicePredicate, SliceRange)
 from thrift_test import _i64, get_thrift_client
 from tools.assertions import assert_length_equal, assert_lists_of_dicts_equal
-from tools.misc import wait_for_agreement
+from tools.misc import wait_for_agreement, add_skip
 from .upgrade_base import UpgradeTester
 from .upgrade_manifest import build_upgrade_pairs
 
@@ -564,6 +564,7 @@ for spec in specs:
     assert gen_class_name not in globals()
 
     upgrade_applies_to_env = RUN_STATIC_UPGRADE_MATRIX or spec['UPGRADE_PATH'].upgrade_meta.matches_current_env_version_family
+    cls = type(gen_class_name, (TestThrift,), spec)
     if not upgrade_applies_to_env:
-        pytest.mark.skip(reason='test not applicable to env.')
-    globals()[gen_class_name] = type(gen_class_name, (TestThrift,), spec)
+        add_skip(cls, 'test not applicable to env.')
+    globals()[gen_class_name] = cls

@@ -3,6 +3,7 @@ import subprocess
 import time
 import hashlib
 import logging
+import pytest
 
 from collections import Mapping
 
@@ -146,3 +147,12 @@ def wait_for_agreement(thrift, timeout=10):
         if len([ss for ss in list(schemas.keys()) if ss != 'UNREACHABLE']) > 1:
             raise Exception("schema agreement not reached")
     retry_till_success(check_agreement, timeout=timeout)
+
+
+def add_skip(cls, reason=""):
+    if hasattr(cls, "pytestmark"):
+        cls.pytestmark = cls.pytestmark.copy()
+        cls.pytestmark.append(pytest.mark.skip(reason))
+    else:
+        cls.pytestmark = [pytest.mark.skip(reason)]
+    return cls

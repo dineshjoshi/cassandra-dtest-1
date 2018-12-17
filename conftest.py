@@ -411,13 +411,16 @@ def pytest_collection_modifyitems(items, config):
     This function is called upon during the pytest test collection phase and allows for modification
     of the test items within the list
     """
-    if not config.getoption("--collect-only") and config.getoption("--cassandra-dir") is None:
-        if config.getoption("--cassandra-version") is None:
+    collect_only = config.getoption("--collect-only")
+    cassandra_dir = config.getoption("--cassandra-dir")
+    cassandra_version = config.getoption("--cassandra-version")
+    if not collect_only and cassandra_dir  is None:
+        if  cassandra_version is None:
             raise Exception("Required dtest arguments were missing! You must provide either --cassandra-dir "
                             "or --cassandra-version. Refer to the documentation or invoke the help with --help.")
 
     # Either cassandra_version or cassandra_dir is defined, so figure out the version
-    CASSANDRA_VERSION = config.getoption("--cassandra-version") or get_version_from_build(config.getoption("--cassandra-dir"))
+    CASSANDRA_VERSION = cassandra_version or get_version_from_build(cassandra_dir)
 
     # Check that use_off_heap_memtables is supported in this c* version
     if config.getoption("--use-off-heap-memtables") and ("3.0" <= CASSANDRA_VERSION < "3.4"):
@@ -435,16 +438,17 @@ def pytest_collection_modifyitems(items, config):
     for item in items:
         deselect_test = False
 
-        if item.get_closest_marker("resource_intensive"):
-            if config.getoption("--force-resource-intensive-tests"):
-                pass
-            if config.getoption("--skip-resource-intensive-tests"):
-                deselect_test = True
-                logger.info("SKIP: Deselecting test %s as test marked resource_intensive. To force execution of "
-                      "this test re-run with the --force-resource-intensive-tests command line argument" % item.name)
-            if not sufficient_system_resources_resource_intensive:
-                deselect_test = True
-                logger.info("SKIP: Deselecting resource_intensive test %s due to insufficient system resources" % item.name)
+        if item.get_closest_marker("resource_intensive") and not collect_only:
+            force_resource_intensive = config.getoption("--force-resource-intensive-tests")
+            skip_resource_intensive = config.getoption("--skip-resource-intensive-tests")
+            if not force_resource_intensive:
+                if skip_resource_intensive:
+                    deselect_test = True
+                    logger.info("SKIP: Deselecting test %s as test marked resource_intensive. To force execution of "
+                          "this test re-run with the --force-resource-intensive-tests command line argument" % item.name)
+                if not sufficient_system_resources_resource_intensive:
+                    deselect_test = True
+                    logger.info("SKIP: Deselecting resource_intensive test %s due to insufficient system resources" % item.name)
 
         if item.get_closest_marker("no_vnodes"):
             if config.getoption("--use-vnodes"):

@@ -27,6 +27,7 @@ from thrift_test import get_thrift_client
 from tools.assertions import (assert_all, assert_invalid, assert_length_equal,
                               assert_none, assert_one, assert_row_count)
 from tools.data import rows_to_list
+from tools.misc import add_skip
 from .upgrade_base import UpgradeTester
 from .upgrade_manifest import build_upgrade_pairs
 
@@ -5401,6 +5402,7 @@ for spec in specs:
     assert gen_class_name not in globals()
 
     upgrade_applies_to_env = RUN_STATIC_UPGRADE_MATRIX or spec['UPGRADE_PATH'].upgrade_meta.matches_current_env_version_family
+    cls = type(gen_class_name, (TestCQL,), spec)
     if not upgrade_applies_to_env:
-        pytest.skip('test not applicable to env.')
-    globals()[gen_class_name] = type(gen_class_name, (TestCQL,), spec)
+        add_skip(cls, 'test not applicable to env.')
+    globals()[gen_class_name] = cls

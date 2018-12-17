@@ -14,6 +14,7 @@ from dtest import RUN_STATIC_UPGRADE_MATRIX, run_scenarios, MAJOR_VERSION_4
 from tools.assertions import (assert_read_timeout_or_failure, assert_lists_equal_ignoring_order)
 from tools.data import rows_to_list
 from tools.datahelp import create_rows, flatten_into_set, parse_data_into_dicts
+from tools.misc import add_skip
 from tools.paging import PageAssertionMixin, PageFetcher
 from .upgrade_base import UpgradeTester
 from .upgrade_manifest import build_upgrade_pairs
@@ -1548,6 +1549,7 @@ for klaus in BasePagingTester.__subclasses__():
         assert gen_class_name not in globals()
 
         upgrade_applies_to_env = RUN_STATIC_UPGRADE_MATRIX or spec['UPGRADE_PATH'].upgrade_meta.matches_current_env_version_family
+        cls = type(gen_class_name, (klaus,), spec)
         if not upgrade_applies_to_env:
-            pytest.mark.skip(reason='test not applicable to env.')
-        globals()[gen_class_name] = type(gen_class_name, (klaus,), spec)
+            add_skip(cls, 'test not applicable to env.')
+        globals()[gen_class_name] = cls
