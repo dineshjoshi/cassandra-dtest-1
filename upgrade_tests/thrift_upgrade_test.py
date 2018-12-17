@@ -11,6 +11,7 @@ from thrift_bindings.thrift010.Cassandra import (Column, ColumnDef,
                                            SlicePredicate, SliceRange)
 from thrift_test import _i64, get_thrift_client
 from tools.assertions import assert_length_equal, assert_lists_of_dicts_equal
+from tools.misc import wait_for_agreement
 from .upgrade_base import UpgradeTester
 from .upgrade_manifest import build_upgrade_pairs
 
@@ -18,22 +19,26 @@ since = pytest.mark.since
 logger = logging.getLogger(__name__)
 
 
-def _create_dense_super_cf(name):
-    return Cassandra.CfDef('ks', name, column_type='Super',
+def _create_dense_super_cf(thrift, name):
+    cfdef = Cassandra.CfDef('ks', name, column_type='Super',
                            key_validation_class='AsciiType',        # pk
                            comparator_type='AsciiType',             # ck
                            default_validation_class='AsciiType',    # SC value
                            subcomparator_type='LongType')           # SC key
+    thrift.system_add_column_family(cfdef)
+    wait_for_agreement(thrift)
 
 
-def _create_sparse_super_cf(name):
+def _create_sparse_super_cf(thrift, name):
     cd1 = ColumnDef('col1'.encode(), 'LongType', None, None)
     cd2 = ColumnDef('col2'.encode(), 'LongType', None, None)
-    return Cassandra.CfDef('ks', name, column_type='Super',
+    cfdef = Cassandra.CfDef('ks', name, column_type='Super',
                            column_metadata=[cd1, cd2],
                            key_validation_class='AsciiType',
                            comparator_type='AsciiType',
                            subcomparator_type='AsciiType')
+    thrift.system_add_column_family(cfdef)
+    wait_for_agreement(thrift)
 
 
 def unpack(list):
@@ -241,7 +246,7 @@ class TestUpgradeSuperColumnsThrough(Tester):
         client.transport.open()
         client.set_keyspace('ks')
 
-        client.system_add_column_family(_create_dense_super_cf('dense_super_1'))
+        _create_dense_super_cf(client, 'dense_super_1')
 
         for i in range(1, 3):
             client.insert('k1'.encode(), ColumnParent('dense_super_1', 'key{}'.format(i).encode()), Column(_i64(100), 'value1'.encode(), 0), ConsistencyLevel.ONE)
@@ -280,7 +285,7 @@ class TestUpgradeSuperColumnsThrough(Tester):
         client.transport.open()
         client.set_keyspace('ks')
 
-        client.system_add_column_family(_create_dense_super_cf('dense_super_1'))
+        _create_dense_super_cf(client, 'dense_super_1')
 
         for i in range(1, 3):
             client.insert('k1'.encode(), ColumnParent('dense_super_1', 'key{}'.format(i).encode()), Column(_i64(100), 'value1'.encode(), 0), ConsistencyLevel.ONE)
@@ -327,8 +332,7 @@ class TestUpgradeSuperColumnsThrough(Tester):
         client.transport.open()
         client.set_keyspace('ks')
 
-        cf = _create_sparse_super_cf('sparse_super_2')
-        client.system_add_column_family(cf)
+        _create_sparse_super_cf(client, 'sparse_super_2')
 
         for i in range(1, 3):
             client.insert('k1'.encode(), ColumnParent('sparse_super_2', 'key{}'.format(i).encode()), Column("value1".encode(), _i64(100), 0), ConsistencyLevel.ONE)
@@ -390,7 +394,7 @@ class TestThrift(UpgradeTester):
         client.transport.open()
         client.set_keyspace('ks')
 
-        client.system_add_column_family(_create_dense_super_cf('dense_super_1'))
+        _create_dense_super_cf(client, 'dense_super_1')
 
         for i in range(1, 3):
             client.insert('k1'.encode(), ColumnParent('dense_super_1', 'key{}'.format(i).encode()), Column(_i64(100), 'value1'.encode(), 0), ConsistencyLevel.ONE)
@@ -425,7 +429,7 @@ class TestThrift(UpgradeTester):
         client.transport.open()
         client.set_keyspace('ks')
 
-        client.system_add_column_family(_create_dense_super_cf('dense_super_2'))
+        _create_dense_super_cf(client, 'dense_super_2')
 
         for i in range(1, 3):
             client.insert('k1'.encode(), ColumnParent('dense_super_2', 'key{}'.format(i).encode()), Column(_i64(100), 'value1'.encode(), 0), ConsistencyLevel.ONE)
@@ -465,8 +469,7 @@ class TestThrift(UpgradeTester):
         client.transport.open()
         client.set_keyspace('ks')
 
-        cf = _create_sparse_super_cf('sparse_super_1')
-        client.system_add_column_family(cf)
+        _create_sparse_super_cf(client, 'sparse_super_1')
 
         #The alter after was failing claiming the column family didn't exist.
         #This test is so slow and it's Thrift and going away "soon" and we
@@ -515,8 +518,7 @@ class TestThrift(UpgradeTester):
         client.transport.open()
         client.set_keyspace('ks')
 
-        cf = _create_sparse_super_cf('sparse_super_2')
-        client.system_add_column_family(cf)
+        _create_sparse_super_cf(client, 'sparse_super_2')
 
         for i in range(1, 3):
             client.insert('k1'.encode(), ColumnParent('sparse_super_2', 'key{}'.format(i).encode()), Column("value1".encode(), _i64(100), 0), ConsistencyLevel.ONE)

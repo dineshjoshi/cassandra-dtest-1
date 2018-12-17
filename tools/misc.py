@@ -138,3 +138,11 @@ class ImmutableMapping(Mapping):
 
     def __repr__(self):
         return '{cls}({data})'.format(cls=self.__class__.__name__, data=self._data)
+
+
+def wait_for_agreement(thrift, timeout=10):
+    def check_agreement():
+        schemas = thrift.describe_schema_versions()
+        if len([ss for ss in list(schemas.keys()) if ss != 'UNREACHABLE']) > 1:
+            raise Exception("schema agreement not reached")
+    retry_till_success(check_agreement, timeout=timeout)
