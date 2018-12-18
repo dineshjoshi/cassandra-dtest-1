@@ -123,7 +123,7 @@ def data_checker(tester, to_verify_queue, verification_done_queue):
                 # rewrite rows in the same sequence as originally written
                 pass
 
-        tester.assertEqual(expected_val, actual_val, "Data did not match expected value!")
+        assert expected_val == actual_val, "Data did not match expected value!"
 
 
 def counter_incrementer(tester, to_verify_queue, verification_done_queue, rewrite_probability=0):
@@ -294,7 +294,8 @@ class TestUpgrade(Tester):
 
     def upgrade_scenario(self, populate=True, create_schema=True, rolling=False, after_upgrade_call=(), internode_ssl=False):
         # Record the rows we write as we go:
-        self.prepare()
+        if populate:
+            self.prepare()
         self.row_values = set()
         cluster = self.cluster
         if cluster.version() >= '3.0':
@@ -708,6 +709,7 @@ class BootstrapMixin(object):
     def test_bootstrap_multidc(self):
         # try and add a new node
         # multi dc, 2 nodes in each dc
+        self.prepare()
         cluster = self.cluster
 
         if cluster.version() >= '3.0':
