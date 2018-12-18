@@ -248,13 +248,13 @@ class TestUpgrade(Tester):
             r'Unknown column cdc during deserialization',
         )
 
-    def setUp(self):
+    def prepare(self):
         logger.debug("Upgrade test beginning, setting CASSANDRA_VERSION to {}, and jdk to {}. (Prior values will be restored after test)."
               .format(self.test_version_metas[0].version, self.test_version_metas[0].java_version))
-        os.environ['CASSANDRA_VERSION'] = self.test_version_metas[0].version
+        cluster = self.cluster
+        cluster.set_install_dir(version=self.test_version_metas[0].version)
         switch_jdks(self.test_version_metas[0].java_version)
-
-        super(TestUpgrade, self).setUp()
+        self.fixture_dtest_setup.reinitialize_cluster_for_different_version()
         logger.debug("Versions to test (%s): %s" % (type(self), str([v.version for v in self.test_version_metas])))
 
     def init_config(self):
@@ -294,6 +294,7 @@ class TestUpgrade(Tester):
 
     def upgrade_scenario(self, populate=True, create_schema=True, rolling=False, after_upgrade_call=(), internode_ssl=False):
         # Record the rows we write as we go:
+        self.prepare()
         self.row_values = set()
         cluster = self.cluster
         if cluster.version() >= '3.0':
