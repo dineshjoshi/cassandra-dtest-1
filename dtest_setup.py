@@ -520,7 +520,6 @@ class DTestSetup:
         This method is used by upgrade tests to re-init the cluster to work with a specific
         version that may not be compatible with the existing configuration options
         """
-        self.cluster._config_options = None
         self.init_default_config()
 
 
