@@ -784,12 +784,9 @@ def create_upgrade_class(clsname, version_metas, protocol_version,
             parent_classes,
             {'test_version_metas': version_metas, '__test__': True, 'protocol_version': protocol_version, 'extra_config': extra_config}
         )
-    if upgrade_applies_to_env:
-        replacement = []
-        for mark in newcls.pytestmark:
-            if not mark.name == "skip":
-                replacement.append(mark)
-        newcls.pytestmark = replacement
+    newcls.pytestmark = [mark for mark in newcls.pytestmark if not mark.name == "skip"]
+    if not upgrade_applies_to_env:
+        newcls.pytestmark.append(pytest.mark.skip("test not applicable to env"))
 
     if clsname in globals():
         raise RuntimeError("Class by name already exists!")
