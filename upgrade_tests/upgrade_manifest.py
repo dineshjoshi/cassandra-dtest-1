@@ -129,8 +129,8 @@ current_2_2_x = VersionMeta(name='current_2_2_x', family='2.2.x', variant='curre
 indev_3_0_x = VersionMeta(name='indev_3_0_x', family='3.0.x', variant='indev', version='github:apache/cassandra-3.0', min_proto_v=3, max_proto_v=4, java_versions=(8,))
 current_3_0_x = VersionMeta(name='current_3_0_x', family='3.0.x', variant='current', version='3.0.17', min_proto_v=3, max_proto_v=4, java_versions=(8,))
 
-indev_3_x = VersionMeta(name='indev_3_x', family='3.x', variant='indev', version='github:apache/cassandra-3.11', min_proto_v=3, max_proto_v=4, java_versions=(8,))
-current_3_x = VersionMeta(name='current_3_x', family='3.x', variant='current', version='3.11.3', min_proto_v=3, max_proto_v=4, java_versions=(8,))
+indev_3_11_x = VersionMeta(name='indev_3_11_x', family='3.11.x', variant='indev', version='github:apache/cassandra-3.11', min_proto_v=3, max_proto_v=4, java_versions=(8,))
+current_3_11_x = VersionMeta(name='current_3_11_x', family='3.11.x', variant='current', version='3.11.3', min_proto_v=3, max_proto_v=4, java_versions=(8,))
 
 indev_trunk = VersionMeta(name='indev_trunk', family='trunk', variant='indev', version='github:apache/trunk', min_proto_v=4, max_proto_v=5, java_versions=(8,))
 
@@ -143,17 +143,17 @@ indev_trunk = VersionMeta(name='indev_trunk', family='trunk', variant='indev', v
 #   3) Nodes upgraded to version B can read data stored by the predecessor version A, and from a data standpoint will function the same as if they always ran version B.
 #   4) If a new sstable format is present in version B, writes will occur in that format after upgrade. Running sstableupgrade on version B will proactively convert version A sstables to version B.
 MANIFEST = {
-    indev_2_1_x: [indev_2_2_x, current_2_2_x, indev_3_0_x, current_3_0_x, indev_3_x, current_3_x],
-    current_2_1_x: [indev_2_1_x, indev_2_2_x, current_2_2_x, indev_3_0_x, current_3_0_x, indev_3_x, current_3_x],
+    indev_2_1_x: [indev_2_2_x, current_2_2_x, indev_3_0_x, current_3_0_x, indev_3_11_x, current_3_11_x],
+    current_2_1_x: [indev_2_1_x, indev_2_2_x, current_2_2_x, indev_3_0_x, current_3_0_x, indev_3_11_x, current_3_11_x],
 
-    indev_2_2_x: [indev_3_0_x, current_3_0_x, indev_3_x, current_3_x],
-    current_2_2_x: [indev_2_2_x, indev_3_0_x, current_3_0_x, indev_3_x, current_3_x],
+    indev_2_2_x: [indev_3_0_x, current_3_0_x, indev_3_11_x, current_3_11_x],
+    current_2_2_x: [indev_2_2_x, indev_3_0_x, current_3_0_x, indev_3_11_x, current_3_11_x],
 
-    indev_3_0_x: [indev_3_x, current_3_x],
-    current_3_0_x: [indev_3_0_x, indev_3_x, current_3_x, indev_trunk],
+    indev_3_0_x: [indev_3_11_x, current_3_11_x],
+    current_3_0_x: [indev_3_0_x, indev_3_11_x, current_3_11_x, indev_trunk],
 
-    current_3_x: [indev_3_x, indev_trunk],
-    indev_3_x: [indev_trunk]
+    current_3_11_x: [indev_3_11_x, indev_trunk],
+    indev_3_11_x: [indev_trunk]
 }
 
 # Local env and custom path testing instructions. Use these steps to REPLACE the normal upgrade test cases with your own.
