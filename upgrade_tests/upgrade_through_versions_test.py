@@ -275,6 +275,7 @@ class TestUpgrade(Tester):
         """
         self.upgrade_scenario()
 
+    @pytest.mark.timeout(1500)
     def test_rolling_upgrade(self):
         """
         Test rolling upgrade of the cluster, so we have mixed versions part way through.
@@ -287,6 +288,7 @@ class TestUpgrade(Tester):
         """
         self.upgrade_scenario(internode_ssl=True)
 
+    @pytest.mark.timeout(1500)
     def test_rolling_upgrade_with_internode_ssl(self):
         """
         Rolling upgrade test using internode ssl.
