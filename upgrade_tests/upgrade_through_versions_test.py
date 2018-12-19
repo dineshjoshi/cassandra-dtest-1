@@ -226,6 +226,7 @@ def counter_checker(tester, to_verify_queue, verification_done_queue):
 
 @pytest.mark.upgrade_test
 @pytest.mark.resource_intensive
+@pytest.mark.skip("Fake skip so that this isn't run outside of a generated class that removes this annotation")
 class TestUpgrade(Tester):
     """
     Upgrades a 3-node Murmur3Partitioner cluster through versions specified in test_version_metas.
@@ -778,13 +779,17 @@ def create_upgrade_class(clsname, version_metas, protocol_version,
     print("  to run these tests alone, use `nosetests {}.py:{}`".format(__name__, clsname))
 
     upgrade_applies_to_env = RUN_STATIC_UPGRADE_MATRIX or version_metas[-1].matches_current_env_version_family
-    if not upgrade_applies_to_env:
-        pytest.mark.skip(reason='test not applicable to env.')
     newcls = type(
             clsname,
             parent_classes,
             {'test_version_metas': version_metas, '__test__': True, 'protocol_version': protocol_version, 'extra_config': extra_config}
         )
+    if upgrade_applies_to_env:
+        replacement = []
+        for mark in newcls.pytestmark:
+            if not mark.name == "skip":
+                replacement.append(mark)
+        newcls.pytestmark = replacement
 
     if clsname in globals():
         raise RuntimeError("Class by name already exists!")
