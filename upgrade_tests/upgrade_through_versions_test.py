@@ -68,7 +68,7 @@ def data_writer(tester, to_verify_queue, verification_done_queue, rewrite_probab
 
             session.execute(prepared, (val, key))
 
-            to_verify_queue.put_nowait((key, val,))
+            to_verify_queue.put((key, val,))
         except Exception:
             logger.debug("Error in data writer process!")
             to_verify_queue.close()
@@ -166,7 +166,7 @@ def counter_incrementer(tester, to_verify_queue, verification_done_queue, rewrit
 
             session.execute(prepared, (key))
 
-            to_verify_queue.put_nowait((key, count + 1,))
+            to_verify_queue.put((key, count + 1,))
         except Exception:
             logger.debug("Error in counter incrementer process!")
             to_verify_queue.close()
@@ -809,9 +809,9 @@ MULTI_UPGRADES = (
 
     # Proto v4 upgrades (v4 is supported on 2.2, 3.0, 3.1, trunk)
     MultiUpgrade(name='TestProtoV4Upgrade_AllVersions_EndsAt_Trunk_HEAD',
-                 version_metas=[current_2_2_x, current_3_0_x, indev_3_11_x, indev_trunk], protocol_version=4, extra_config=None),
+                 version_metas=[current_2_2_x, current_3_0_x, current_3_11_x, indev_trunk], protocol_version=4, extra_config=None),
     MultiUpgrade(name='TestProtoV4Upgrade_AllVersions_RandomPartitioner_EndsAt_Trunk_HEAD',
-                 version_metas=[current_2_2_x, current_3_0_x, indev_3_11_x, indev_trunk], protocol_version=4,
+                 version_metas=[current_2_2_x, current_3_0_x, current_3_11_x, indev_trunk], protocol_version=4,
                  extra_config=(
                      ('partitioner', 'org.apache.cassandra.dht.RandomPartitioner'),
                  )),
