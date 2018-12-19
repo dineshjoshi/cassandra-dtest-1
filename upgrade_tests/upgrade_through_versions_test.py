@@ -813,14 +813,16 @@ MULTI_UPGRADES = (
                  extra_config=(
                      ('partitioner', 'org.apache.cassandra.dht.RandomPartitioner'),
                  )),
+    #Beta versions don't work with this test since it doesn't specify use beta in the client
+    #It's fine I guess for now? Can update on release
     # Proto v5 upgrades (v5 is supported on 3.0, 3.11, trunk)
-    MultiUpgrade(name='TestProtoV5Upgrade_AllVersions_EndsAt_Trunk_HEAD',
-                 version_metas=[current_3_0_x, current_3_x, indev_trunk], protocol_version=5, extra_config=None),
-    MultiUpgrade(name='TestProtoV5Upgrade_AllVersions_RandomPartitioner_EndsAt_Trunk_HEAD',
-                 version_metas=[current_3_0_x, current_3_x, indev_trunk], protocol_version=5,
-                 extra_config=(
-                     ('partitioner', 'org.apache.cassandra.dht.RandomPartitioner'),
-                 )),
+    # MultiUpgrade(name='TestProtoV5Upgrade_AllVersions_EndsAt_Trunk_HEAD',
+    #              version_metas=[current_3_0_x, current_3_x, indev_trunk], protocol_version=5, extra_config=None),
+    # MultiUpgrade(name='TestProtoV5Upgrade_AllVersions_RandomPartitioner_EndsAt_Trunk_HEAD',
+    #              version_metas=[current_3_0_x, current_3_x, indev_trunk], protocol_version=5,
+    #              extra_config=(
+    #                  ('partitioner', 'org.apache.cassandra.dht.RandomPartitioner'),
+    #              )),
 )
 
 for upgrade in MULTI_UPGRADES:
