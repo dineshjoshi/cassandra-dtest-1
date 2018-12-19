@@ -438,7 +438,7 @@ class TestUpgrade(Tester):
         for node in nodes:
             node.set_install_dir(version=version_meta.version)
             logger.debug("Set new cassandra dir for %s: %s" % (node.name, node.get_install_dir()))
-            if internode_ssl and version_meta.version >= '4.0':
+            if internode_ssl and (version_meta.family == 'trunk' or version_meta.family >= '4.0'):
                 node.set_configuration_options({'server_encryption_options': {'enabled': True, 'enable_legacy_ssl_storage_port': True}})
 
         # hacky? yes. We could probably extend ccm to allow this publicly.
