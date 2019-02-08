@@ -19,6 +19,9 @@ import sys
 import logging
 from os.path import dirname, join, normpath
 
+import cassandra
+from cassandra.cluster import Cluster
+
 cqlshlog = logging.getLogger('test_cqlsh')
 
 try:
@@ -36,10 +39,10 @@ path_to_cqlsh = normpath(join(cqlshdir, 'cqlsh.py'))
 
 sys.path.append(cqlshdir)
 
-import cqlsh
-cql = cqlsh.cassandra.cluster.Cluster
-policy = cqlsh.cassandra.policies.RoundRobinPolicy()
-quote_name = cqlsh.cassandra.metadata.maybe_escape_name
+# import cqlsh
+cql = Cluster
+policy = cassandra.policies.RoundRobinPolicy()
+quote_name = cassandra.metadata.maybe_escape_name
 
 TEST_HOST = os.environ.get('CQL_TEST_HOST', '127.0.0.1')
 TEST_PORT = int(os.environ.get('CQL_TEST_PORT', 9042))

@@ -17,7 +17,7 @@
 # to configure behavior, define $CQL_TEST_HOST to the destination address
 # and $CQL_TEST_PORT to the associated port.
 
-from .basecase import BaseTestCase, cqlsh
+from .basecase import BaseTestCase
 
 class TestCqlshCommands(BaseTestCase):
     def setUp(self):

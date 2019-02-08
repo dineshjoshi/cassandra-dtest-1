@@ -20,7 +20,9 @@
 from __future__ import with_statement
 
 import re
-from .basecase import BaseTestCase, cqlsh
+
+from cqlshlib import cql3handling
+from .basecase import BaseTestCase
 from .cassconnect import testrun_cqlsh
 import unittest
 import sys
@@ -141,7 +143,7 @@ class CqlshCompletionCase(BaseTestCase):
 
 class TestCqlshCompletion(CqlshCompletionCase):
     cqlver = '3.1.6'
-    module = cqlsh.cql3handling
+    module = cql3handling
 
     def test_complete_on_empty_string(self):
         self.trycompletions('', choices=('?', 'ALTER', 'BEGIN', 'CAPTURE', 'CONSISTENCY',

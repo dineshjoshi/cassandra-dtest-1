@@ -21,7 +21,7 @@ from __future__ import with_statement
 
 import re
 from itertools import izip
-from .basecase import (BaseTestCase, cqlshlog, dedent, at_a_time, cqlsh,
+from .basecase import (BaseTestCase, cqlshlog, dedent, at_a_time,
                        TEST_HOST, TEST_PORT)
 from .cassconnect import (get_keyspace, testrun_cqlsh, testcall_cqlsh,
                           cassandra_cursor, split_cql_commands, quote_name)
