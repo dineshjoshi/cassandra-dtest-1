@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,7 +16,7 @@
 # limitations under the License.
 
 import os
-import cqlhandling
+from . import cqlhandling
 
 # we want the cql parser to understand our cqlsh-specific commands too
 my_commands_ending_with_newline = (

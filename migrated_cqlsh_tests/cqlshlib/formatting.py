@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -23,13 +24,13 @@ import re
 import sys
 import six
 import platform
-import wcwidth
+from . import wcwidth
 
 from collections import defaultdict
-from displaying import colorme, get_str, FormattedValue, DEFAULT_VALUE_COLORS, NO_COLOR_MAP
+from .displaying import colorme, get_str, FormattedValue, DEFAULT_VALUE_COLORS, NO_COLOR_MAP
 from cassandra.cqltypes import EMPTY
 from cassandra.util import datetime_from_timestamp
-from util import UTC
+from .util import UTC
 
 is_win = platform.system() == 'Windows'
 
@@ -453,14 +454,14 @@ def decode_unsigned_vint(buf):
     For example, if we need to read 3 more bytes the first byte will start with 1110.
     """
 
-    first_byte = buf.next()
+    first_byte = next(buf)
     if (first_byte >> 7) == 0:
         return first_byte
 
     size = number_of_extra_bytes_to_read(first_byte)
     retval = first_byte & (0xff >> size)
     for i in range(size):
-        b = buf.next()
+        b = next(buf)
         retval <<= 8
         retval |= b & 0xff
 
