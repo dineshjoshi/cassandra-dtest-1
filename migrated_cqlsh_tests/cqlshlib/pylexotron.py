@@ -360,7 +360,7 @@ class ParsingRuleSet:
         (r'[@()|?*;]', lambda s, t: t),
         (r'\s+', None),
         (r'#[^\n]*', None),
-    ], re.I | re.S)
+    ], re.I | re.S | re.U)
 
     def __init__(self):
         self.ruleset = {}
