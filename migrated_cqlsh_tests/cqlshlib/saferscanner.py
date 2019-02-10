@@ -25,17 +25,19 @@ from sre_constants import BRANCH, SUBPATTERN, GROUPREF, GROUPREF_IGNORE, GROUPRE
 class SaferScanner(re.Scanner):
 
     def __init__(self, lexicon, flags=0):
+        from sre_constants import BRANCH, SUBPATTERN
         self.lexicon = lexicon
+        # combine phrases into a compound pattern
         p = []
         s = re.sre_parse.Pattern()
         s.flags = flags
         for phrase, action in lexicon:
+            gid = s.opengroup()
             p.append(re.sre_parse.SubPattern(s, [
-                (SUBPATTERN, (len(p) + 1, self.subpat(phrase, flags))),
-            ]))
-        s.groups = len(p) + 1
+                (SUBPATTERN, (gid, 0, 0, re.sre_parse.parse(phrase, flags))),
+                ]))
+            s.closegroup(gid, p[-1])
         p = re.sre_parse.SubPattern(s, [(BRANCH, (None, p))])
-        self.p = p
         self.scanner = re.sre_compile.compile(p)
 
     @classmethod

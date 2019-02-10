@@ -19,10 +19,9 @@ from __future__ import print_function
 import cProfile
 import codecs
 import pstats
-
-from itertools import izip
+import io
 from datetime import timedelta, tzinfo
-from StringIO import StringIO
+from io import StringIO
 
 try:
     from line_profiler import LineProfiler
@@ -78,7 +77,7 @@ def find_common_prefix(strs):
     """
 
     common = []
-    for cgroup in izip(*strs):
+    for cgroup in zip(*strs):
         if all(x == cgroup[0] for x in cgroup[1:]):
             common.append(cgroup[0])
         else:
