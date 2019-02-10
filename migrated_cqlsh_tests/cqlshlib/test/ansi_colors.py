@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from builtins import str
+from builtins import map
+from past.builtins import basestring
+from builtins import object
 import re
 
 LIGHT = 0o10
@@ -61,7 +65,7 @@ for colordef in color_defs:
     for c in nameset:
         colors_by_name[c] = colorcode
 
-class ColoredChar:
+class ColoredChar(object):
     def __init__(self, c, colorcode):
         self.c = c
         self._colorcode = colorcode
@@ -100,11 +104,11 @@ class ColoredChar:
     def colortag(self):
         return lookup_letter_from_code(self._colorcode)
 
-class ColoredText:
+class ColoredText(object):
     def __init__(self, source=''):
         if isinstance(source, basestring):
             plain, colors = self.parse_ansi_colors(source)
-            self.chars = map(ColoredChar, plain, colors)
+            self.chars = list(map(ColoredChar, plain, colors))
         else:
             # expected that source is an iterable of ColoredChars (or duck-typed as such)
             self.chars = tuple(source)
@@ -149,7 +153,7 @@ class ColoredText:
     @staticmethod
     def parse_sgr_param(curclr, paramstr):
         oldclr = curclr
-        args = map(int, paramstr.split(';'))
+        args = list(map(int, paramstr.split(';')))
         for a in args:
             if a == 0:
                 curclr = lookup_colorcode('neutral')

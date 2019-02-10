@@ -52,17 +52,17 @@ class TestCqlParsing(TestCase):
 
         tokens = CqlRuleSet.lex("$$spam\nspam\n\tsausage$$")
         tokens = CqlRuleSet.cql_massage_tokens(tokens)
-        # [('pgStringLiteral', '$$spam\nspam\n\tsausage$$', (0, 22))]
+        # [(b'pgStringLiteral', '$$spam\nspam\n\tsausage$$', (0, 22))]
         self.assertEqual(tokens[0][0], "pgStringLiteral")
 
         tokens = CqlRuleSet.lex("$$spam\nspam\n")
         tokens = CqlRuleSet.cql_massage_tokens(tokens)
-        # [('unclosedPgString', '$$', (0, 2)), ('identifier', 'spam', (2, 6)), ('identifier', 'spam', (7, 11))]
+        # [(b'unclosedPgString', '$$', (0, 2)), (b'identifier', 'spam', (2, 6)), (b'identifier', 'spam', (7, 11))]
         self.assertEqual(tokens[0][0], "unclosedPgString")
 
         tokens = CqlRuleSet.lex("$$foo bar$$ $$spam\nspam\n")
         tokens = CqlRuleSet.cql_massage_tokens(tokens)
-        # [('pgStringLiteral', '$$foo bar$$', (0, 11)), ('unclosedPgString', '$$', (12, 14)), ('identifier', 'spam', (14, 18)), ('identifier', 'spam', (19, 23))]
+        # [(b'pgStringLiteral', '$$foo bar$$', (0, 11)), (b'unclosedPgString', '$$', (12, 14)), (b'identifier', 'spam', (14, 18)), (b'identifier', 'spam', (19, 23))]
         self.assertEqual(tokens[0][0], "pgStringLiteral")
         self.assertEqual(tokens[1][0], "unclosedPgString")
 
@@ -99,365 +99,365 @@ class TestCqlParsing(TestCase):
         [parsed] = CqlRuleSet.cql_parse('INSERT INTO ks.test')
         self.assertSequenceEqual(parsed.matched, [])
         self.assertSequenceEqual(tokens_with_types(parsed.remainder),
-                                 [('INSERT', 'reserved_identifier'),
-                                  ('INTO', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  ('.', 'op'),
-                                  ('test', 'identifier')])
+                                 [(b'INSERT', 'reserved_identifier'),
+                                  (b'INTO', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b'.', 'op'),
+                                  (b'test', 'identifier')])
 
     def test_parse_select(self):
         parsed = parse_cqlsh_statements('SELECT FROM ks.tab;')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('SELECT', 'reserved_identifier'),
-                                  ('FROM', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  ('.', 'op'),
-                                  ('tab', 'identifier'),
-                                  (';', 'endtoken')])
+                                 [(b'SELECT', 'reserved_identifier'),
+                                  (b'FROM', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b'.', 'op'),
+                                  (b'tab', 'identifier'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements('SELECT FROM "MyTable";')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('SELECT', 'reserved_identifier'),
-                                  ('FROM', 'reserved_identifier'),
-                                  ('"MyTable"', 'quotedName'),
-                                  (';', 'endtoken')])
+                                 [(b'SELECT', 'reserved_identifier'),
+                                  (b'FROM', 'reserved_identifier'),
+                                  (b'"MyTable"', 'quotedName'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             'SELECT FROM tab WHERE foo = 3;')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('SELECT', 'reserved_identifier'),
-                                  ('FROM', 'reserved_identifier'),
-                                  ('tab', 'identifier'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('foo', 'identifier'),
-                                  ('=', 'op'),
-                                  ('3', 'wholenumber'),
-                                  (';', 'endtoken')])
+                                 [(b'SELECT', 'reserved_identifier'),
+                                  (b'FROM', 'reserved_identifier'),
+                                  (b'tab', 'identifier'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'foo', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'3', 'wholenumber'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             'SELECT FROM tab ORDER BY event_id DESC LIMIT 1000')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('SELECT', 'reserved_identifier'),
-                                  ('FROM', 'reserved_identifier'),
-                                  ('tab', 'identifier'),
-                                  ('ORDER', 'reserved_identifier'),
-                                  ('BY', 'reserved_identifier'),
-                                  ('event_id', 'identifier'),
-                                  ('DESC', 'reserved_identifier'),
-                                  ('LIMIT', 'reserved_identifier'),
-                                  ('1000', 'wholenumber')])
+                                 [(b'SELECT', 'reserved_identifier'),
+                                  (b'FROM', 'reserved_identifier'),
+                                  (b'tab', 'identifier'),
+                                  (b'ORDER', 'reserved_identifier'),
+                                  (b'BY', 'reserved_identifier'),
+                                  (b'event_id', 'identifier'),
+                                  (b'DESC', 'reserved_identifier'),
+                                  (b'LIMIT', 'reserved_identifier'),
+                                  (b'1000', 'wholenumber')])
 
         parsed = parse_cqlsh_statements(
             'SELECT FROM tab WHERE clustering_column > 200 '
             'AND clustering_column < 400 ALLOW FILTERING')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('SELECT', 'reserved_identifier'),
-                                  ('FROM', 'reserved_identifier'),
-                                  ('tab', 'identifier'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('clustering_column', 'identifier'),
-                                  ('>', 'cmp'),
-                                  ('200', 'wholenumber'),
-                                  ('AND', 'reserved_identifier'),
-                                  ('clustering_column', 'identifier'),
-                                  ('<', 'cmp'),
-                                  ('400', 'wholenumber'),
+                                 [(b'SELECT', 'reserved_identifier'),
+                                  (b'FROM', 'reserved_identifier'),
+                                  (b'tab', 'identifier'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'clustering_column', 'identifier'),
+                                  (b'>', 'cmp'),
+                                  (b'200', 'wholenumber'),
+                                  (b'AND', 'reserved_identifier'),
+                                  (b'clustering_column', 'identifier'),
+                                  (b'<', 'cmp'),
+                                  (b'400', 'wholenumber'),
                                   # 'allow' and 'filtering' are not keywords
-                                  ('ALLOW', 'reserved_identifier'),
-                                  ('FILTERING', 'identifier')])
+                                  (b'ALLOW', 'reserved_identifier'),
+                                  (b'FILTERING', 'identifier')])
 
     def test_parse_insert(self):
         parsed = parse_cqlsh_statements('INSERT INTO mytable (x) VALUES (2);')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('INSERT', 'reserved_identifier'),
-                                  ('INTO', 'reserved_identifier'),
-                                  ('mytable', 'identifier'),
-                                  ('(', 'op'),
-                                  ('x', 'identifier'),
-                                  (')', 'op'),
-                                  ('VALUES', 'identifier'),
-                                  ('(', 'op'),
-                                  ('2', 'wholenumber'),
-                                  (')', 'op'),
-                                  (';', 'endtoken')])
+                                 [(b'INSERT', 'reserved_identifier'),
+                                  (b'INTO', 'reserved_identifier'),
+                                  (b'mytable', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'x', 'identifier'),
+                                  (b')', 'op'),
+                                  (b'VALUES', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'2', 'wholenumber'),
+                                  (b')', 'op'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "INSERT INTO mytable (x, y) VALUES (2, 'eggs');")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('INSERT', 'reserved_identifier'),
-                                  ('INTO', 'reserved_identifier'),
-                                  ('mytable', 'identifier'),
-                                  ('(', 'op'),
-                                  ('x', 'identifier'),
-                                  (',', 'op'),
-                                  ('y', 'identifier'),
-                                  (')', 'op'),
-                                  ('VALUES', 'identifier'),
-                                  ('(', 'op'),
-                                  ('2', 'wholenumber'),
-                                  (',', 'op'),
-                                  ("'eggs'", 'quotedStringLiteral'),
-                                  (')', 'op'),
-                                  (';', 'endtoken')])
+                                 [(b'INSERT', 'reserved_identifier'),
+                                  (b'INTO', 'reserved_identifier'),
+                                  (b'mytable', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'x', 'identifier'),
+                                  (b',', 'op'),
+                                  (b'y', 'identifier'),
+                                  (b')', 'op'),
+                                  (b'VALUES', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'2', 'wholenumber'),
+                                  (b',', 'op'),
+                                  (b"'eggs'", 'quotedStringLiteral'),
+                                  (b')', 'op'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "INSERT INTO mytable (x, y) VALUES (2, 'eggs');")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('INSERT', 'reserved_identifier'),
-                                  ('INTO', 'reserved_identifier'),
-                                  ('mytable', 'identifier'),
-                                  ('(', 'op'),
-                                  ('x', 'identifier'),
-                                  (',', 'op'),
-                                  ('y', 'identifier'),
-                                  (')', 'op'),
-                                  ('VALUES', 'identifier'),
-                                  ('(', 'op'),
-                                  ('2', 'wholenumber'),
-                                  (',', 'op'),
-                                  ("'eggs'", 'quotedStringLiteral'),
-                                  (')', 'op'),
-                                  (';', 'endtoken')])
+                                 [(b'INSERT', 'reserved_identifier'),
+                                  (b'INTO', 'reserved_identifier'),
+                                  (b'mytable', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'x', 'identifier'),
+                                  (b',', 'op'),
+                                  (b'y', 'identifier'),
+                                  (b')', 'op'),
+                                  (b'VALUES', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'2', 'wholenumber'),
+                                  (b',', 'op'),
+                                  (b"'eggs'", 'quotedStringLiteral'),
+                                  (b')', 'op'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "INSERT INTO mytable (ids) VALUES "
             "(7ee251da-af52-49a4-97f4-3f07e406c7a7) "
             "USING TTL 86400;")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('INSERT', 'reserved_identifier'),
-                                  ('INTO', 'reserved_identifier'),
-                                  ('mytable', 'identifier'),
-                                  ('(', 'op'),
-                                  ('ids', 'identifier'),
-                                  (')', 'op'),
-                                  ('VALUES', 'identifier'),
-                                  ('(', 'op'),
-                                  ('7ee251da-af52-49a4-97f4-3f07e406c7a7', 'uuid'),
-                                  (')', 'op'),
-                                  ('USING', 'reserved_identifier'),
-                                  ('TTL', 'identifier'),
-                                  ('86400', 'wholenumber'),
-                                  (';', 'endtoken')])
+                                 [(b'INSERT', 'reserved_identifier'),
+                                  (b'INTO', 'reserved_identifier'),
+                                  (b'mytable', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'ids', 'identifier'),
+                                  (b')', 'op'),
+                                  (b'VALUES', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'7ee251da-af52-49a4-97f4-3f07e406c7a7', 'uuid'),
+                                  (b')', 'op'),
+                                  (b'USING', 'reserved_identifier'),
+                                  (b'TTL', 'identifier'),
+                                  (b'86400', 'wholenumber'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "INSERT INTO test_table (username) VALUES ('Albert') "
             "USING TIMESTAMP 1240003134 AND TTL 600;")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('INSERT', 'reserved_identifier'),
-                                  ('INTO', 'reserved_identifier'),
-                                  ('test_table', 'identifier'),
-                                  ('(', 'op'),
-                                  ('username', 'identifier'),
-                                  (')', 'op'),
-                                  ('VALUES', 'identifier'),
-                                  ('(', 'op'),
-                                  ("'Albert'", 'quotedStringLiteral'),
-                                  (')', 'op'),
-                                  ('USING', 'reserved_identifier'),
-                                  ('TIMESTAMP', 'identifier'),
-                                  ('1240003134', 'wholenumber'),
-                                  ('AND', 'reserved_identifier'),
-                                  ('TTL', 'identifier'),
-                                  ('600', 'wholenumber'),
-                                  (';', 'endtoken')])
+                                 [(b'INSERT', 'reserved_identifier'),
+                                  (b'INTO', 'reserved_identifier'),
+                                  (b'test_table', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'username', 'identifier'),
+                                  (b')', 'op'),
+                                  (b'VALUES', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b"'Albert'", 'quotedStringLiteral'),
+                                  (b')', 'op'),
+                                  (b'USING', 'reserved_identifier'),
+                                  (b'TIMESTAMP', 'identifier'),
+                                  (b'1240003134', 'wholenumber'),
+                                  (b'AND', 'reserved_identifier'),
+                                  (b'TTL', 'identifier'),
+                                  (b'600', 'wholenumber'),
+                                  (b';', 'endtoken')])
 
     def test_parse_update(self):
         parsed = parse_cqlsh_statements(
             "UPDATE tab SET x = 15 WHERE y = 'eggs';")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('UPDATE', 'reserved_identifier'),
-                                  ('tab', 'identifier'),
-                                  ('SET', 'reserved_identifier'),
-                                  ('x', 'identifier'),
-                                  ('=', 'op'),
-                                  ('15', 'wholenumber'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('y', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'eggs'", 'quotedStringLiteral'),
-                                  (';', 'endtoken')])
+                                 [(b'UPDATE', 'reserved_identifier'),
+                                  (b'tab', 'identifier'),
+                                  (b'SET', 'reserved_identifier'),
+                                  (b'x', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'15', 'wholenumber'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'y', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'eggs'", 'quotedStringLiteral'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "UPDATE tab USING TTL 432000 SET x = 15 WHERE y = 'eggs';")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('UPDATE', 'reserved_identifier'),
-                                  ('tab', 'identifier'),
-                                  ('USING', 'reserved_identifier'),
-                                  ('TTL', 'identifier'),
-                                  ('432000', 'wholenumber'),
-                                  ('SET', 'reserved_identifier'),
-                                  ('x', 'identifier'),
-                                  ('=', 'op'),
-                                  ('15', 'wholenumber'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('y', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'eggs'", 'quotedStringLiteral'),
-                                  (';', 'endtoken')])
+                                 [(b'UPDATE', 'reserved_identifier'),
+                                  (b'tab', 'identifier'),
+                                  (b'USING', 'reserved_identifier'),
+                                  (b'TTL', 'identifier'),
+                                  (b'432000', 'wholenumber'),
+                                  (b'SET', 'reserved_identifier'),
+                                  (b'x', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'15', 'wholenumber'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'y', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'eggs'", 'quotedStringLiteral'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "UPDATE tab SET x = 15, y = 'sausage' "
             "WHERE y = 'eggs';")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('UPDATE', 'reserved_identifier'),
-                                  ('tab', 'identifier'),
-                                  ('SET', 'reserved_identifier'),
-                                  ('x', 'identifier'),
-                                  ('=', 'op'),
-                                  ('15', 'wholenumber'),
-                                  (',', 'op'),
-                                  ('y', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'sausage'", 'quotedStringLiteral'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('y', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'eggs'", 'quotedStringLiteral'),
-                                  (';', 'endtoken')])
+                                 [(b'UPDATE', 'reserved_identifier'),
+                                  (b'tab', 'identifier'),
+                                  (b'SET', 'reserved_identifier'),
+                                  (b'x', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'15', 'wholenumber'),
+                                  (b',', 'op'),
+                                  (b'y', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'sausage'", 'quotedStringLiteral'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'y', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'eggs'", 'quotedStringLiteral'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "UPDATE tab SET x = 15 "
             "WHERE y IN ('eggs', 'sausage', 'spam');")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('UPDATE', 'reserved_identifier'),
-                                  ('tab', 'identifier'),
-                                  ('SET', 'reserved_identifier'),
-                                  ('x', 'identifier'),
-                                  ('=', 'op'),
-                                  ('15', 'wholenumber'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('y', 'identifier'),
-                                  ('IN', 'reserved_identifier'),
-                                  ('(', 'op'),
-                                  ("'eggs'", 'quotedStringLiteral'),
-                                  (',', 'op'),
-                                  ("'sausage'", 'quotedStringLiteral'),
-                                  (',', 'op'),
-                                  ("'spam'", 'quotedStringLiteral'),
-                                  (')', 'op'),
-                                  (';', 'endtoken')])
+                                 [(b'UPDATE', 'reserved_identifier'),
+                                  (b'tab', 'identifier'),
+                                  (b'SET', 'reserved_identifier'),
+                                  (b'x', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'15', 'wholenumber'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'y', 'identifier'),
+                                  (b'IN', 'reserved_identifier'),
+                                  (b'(', 'op'),
+                                  (b"'eggs'", 'quotedStringLiteral'),
+                                  (b',', 'op'),
+                                  (b"'sausage'", 'quotedStringLiteral'),
+                                  (b',', 'op'),
+                                  (b"'spam'", 'quotedStringLiteral'),
+                                  (b')', 'op'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "UPDATE tab SET x = 15 "
             "WHERE y = 'spam' IF z = 'sausage';")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('UPDATE', 'reserved_identifier'),
-                                  ('tab', 'identifier'),
-                                  ('SET', 'reserved_identifier'),
-                                  ('x', 'identifier'),
-                                  ('=', 'op'),
-                                  ('15', 'wholenumber'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('y', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'spam'", 'quotedStringLiteral'),
-                                  ('IF', 'reserved_identifier'),
-                                  ('z', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'sausage'", 'quotedStringLiteral'),
-                                  (';', 'endtoken')])
+                                 [(b'UPDATE', 'reserved_identifier'),
+                                  (b'tab', 'identifier'),
+                                  (b'SET', 'reserved_identifier'),
+                                  (b'x', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'15', 'wholenumber'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'y', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'spam'", 'quotedStringLiteral'),
+                                  (b'IF', 'reserved_identifier'),
+                                  (b'z', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'sausage'", 'quotedStringLiteral'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "UPDATE tab SET x = 15 WHERE y = 'spam' "
             "IF z = 'sausage' AND w = 'spam';")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('UPDATE', 'reserved_identifier'),
-                                  ('tab', 'identifier'),
-                                  ('SET', 'reserved_identifier'),
-                                  ('x', 'identifier'),
-                                  ('=', 'op'),
-                                  ('15', 'wholenumber'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('y', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'spam'", 'quotedStringLiteral'),
-                                  ('IF', 'reserved_identifier'),
-                                  ('z', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'sausage'", 'quotedStringLiteral'),
-                                  ('AND', 'reserved_identifier'),
-                                  ('w', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'spam'", 'quotedStringLiteral'),
-                                  (';', 'endtoken')])
+                                 [(b'UPDATE', 'reserved_identifier'),
+                                  (b'tab', 'identifier'),
+                                  (b'SET', 'reserved_identifier'),
+                                  (b'x', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'15', 'wholenumber'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'y', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'spam'", 'quotedStringLiteral'),
+                                  (b'IF', 'reserved_identifier'),
+                                  (b'z', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'sausage'", 'quotedStringLiteral'),
+                                  (b'AND', 'reserved_identifier'),
+                                  (b'w', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'spam'", 'quotedStringLiteral'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "UPDATE tab SET x = 15 WHERE y = 'spam' IF EXISTS")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('UPDATE', 'reserved_identifier'),
-                                  ('tab', 'identifier'),
-                                  ('SET', 'reserved_identifier'),
-                                  ('x', 'identifier'),
-                                  ('=', 'op'),
-                                  ('15', 'wholenumber'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('y', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'spam'", 'quotedStringLiteral'),
-                                  ('IF', 'reserved_identifier'),
-                                  ('EXISTS', 'identifier')])
+                                 [(b'UPDATE', 'reserved_identifier'),
+                                  (b'tab', 'identifier'),
+                                  (b'SET', 'reserved_identifier'),
+                                  (b'x', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'15', 'wholenumber'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'y', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'spam'", 'quotedStringLiteral'),
+                                  (b'IF', 'reserved_identifier'),
+                                  (b'EXISTS', 'identifier')])
 
     def test_parse_delete(self):
         parsed = parse_cqlsh_statements(
             "DELETE FROM songs WHERE songid = 444;")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('DELETE', 'reserved_identifier'),
-                                  ('FROM', 'reserved_identifier'),
-                                  ('songs', 'identifier'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('songid', 'identifier'),
-                                  ('=', 'op'),
-                                  ('444', 'wholenumber'),
-                                  (';', 'endtoken')])
+                                 [(b'DELETE', 'reserved_identifier'),
+                                  (b'FROM', 'reserved_identifier'),
+                                  (b'songs', 'identifier'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'songid', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'444', 'wholenumber'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "DELETE FROM songs WHERE name IN "
             "('Yellow Submarine', 'Eleanor Rigby');")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('DELETE', 'reserved_identifier'),
-                                  ('FROM', 'reserved_identifier'),
-                                  ('songs', 'identifier'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('name', 'identifier'),
-                                  ('IN', 'reserved_identifier'),
-                                  ('(', 'op'),
-                                  ("'Yellow Submarine'", 'quotedStringLiteral'),
-                                  (',', 'op'),
-                                  ("'Eleanor Rigby'", 'quotedStringLiteral'),
-                                  (')', 'op'),
-                                  (';', 'endtoken')])
+                                 [(b'DELETE', 'reserved_identifier'),
+                                  (b'FROM', 'reserved_identifier'),
+                                  (b'songs', 'identifier'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'name', 'identifier'),
+                                  (b'IN', 'reserved_identifier'),
+                                  (b'(', 'op'),
+                                  (b"'Yellow Submarine'", 'quotedStringLiteral'),
+                                  (b',', 'op'),
+                                  (b"'Eleanor Rigby'", 'quotedStringLiteral'),
+                                  (b')', 'op'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "DELETE task_map ['2014-12-25'] FROM tasks WHERE user_id = 'Santa';")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('DELETE', 'reserved_identifier'),
-                                  ('task_map', 'identifier'),
-                                  ('[', 'brackets'),
-                                  ("'2014-12-25'", 'quotedStringLiteral'),
-                                  (']', 'brackets'),
-                                  ('FROM', 'reserved_identifier'),
-                                  ('tasks', 'identifier'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('user_id', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'Santa'", 'quotedStringLiteral'),
-                                  (';', 'endtoken')])
+                                 [(b'DELETE', 'reserved_identifier'),
+                                  (b'task_map', 'identifier'),
+                                  (b'[', 'brackets'),
+                                  (b"'2014-12-25'", 'quotedStringLiteral'),
+                                  (b']', 'brackets'),
+                                  (b'FROM', 'reserved_identifier'),
+                                  (b'tasks', 'identifier'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'user_id', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'Santa'", 'quotedStringLiteral'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "DELETE my_list[0] FROM lists WHERE user_id = 'Jim';")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('DELETE', 'reserved_identifier'),
-                                  ('my_list', 'identifier'),
-                                  ('[', 'brackets'),
-                                  ('0', 'wholenumber'),
-                                  (']', 'brackets'),
-                                  ('FROM', 'reserved_identifier'),
-                                  ('lists', 'identifier'),
-                                  ('WHERE', 'reserved_identifier'),
-                                  ('user_id', 'identifier'),
-                                  ('=', 'op'),
-                                  ("'Jim'", 'quotedStringLiteral'),
-                                  (';', 'endtoken')])
+                                 [(b'DELETE', 'reserved_identifier'),
+                                  (b'my_list', 'identifier'),
+                                  (b'[', 'brackets'),
+                                  (b'0', 'wholenumber'),
+                                  (b']', 'brackets'),
+                                  (b'FROM', 'reserved_identifier'),
+                                  (b'lists', 'identifier'),
+                                  (b'WHERE', 'reserved_identifier'),
+                                  (b'user_id', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b"'Jim'", 'quotedStringLiteral'),
+                                  (b';', 'endtoken')])
 
     def test_parse_batch(self):
         pass
@@ -467,103 +467,103 @@ class TestCqlParsing(TestCase):
             "CREATE KEYSPACE ks WITH REPLICATION = "
             "{'class': 'SimpleStrategy', 'replication_factor': 1};")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('CREATE', 'reserved_identifier'),
-                                  ('KEYSPACE', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  ('WITH', 'reserved_identifier'),
-                                  ('REPLICATION', 'identifier'),
-                                  ('=', 'op'),
-                                  ('{', 'brackets'),
-                                  ("'class'", 'quotedStringLiteral'),
-                                  (':', 'colon'),
-                                  ("'SimpleStrategy'", 'quotedStringLiteral'),
-                                  (',', 'op'),
-                                  ("'replication_factor'", 'quotedStringLiteral'),
-                                  (':', 'colon'),
-                                  ('1', 'wholenumber'),
-                                  ('}', 'brackets'),
-                                  (';', 'endtoken')])
+                                 [(b'CREATE', 'reserved_identifier'),
+                                  (b'KEYSPACE', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b'WITH', 'reserved_identifier'),
+                                  (b'REPLICATION', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'{', 'brackets'),
+                                  (b"'class'", 'quotedStringLiteral'),
+                                  (b':', 'colon'),
+                                  (b"'SimpleStrategy'", 'quotedStringLiteral'),
+                                  (b',', 'op'),
+                                  (b"'replication_factor'", 'quotedStringLiteral'),
+                                  (b':', 'colon'),
+                                  (b'1', 'wholenumber'),
+                                  (b'}', 'brackets'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             'CREATE KEYSPACE "Cql_test_KS" WITH REPLICATION = '
             "{'class': 'NetworkTopologyStrategy', 'dc1' : 3, 'dc2': 2};")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('CREATE', 'reserved_identifier'),
-                                  ('KEYSPACE', 'reserved_identifier'),
-                                  ('"Cql_test_KS"', 'quotedName'),
-                                  ('WITH', 'reserved_identifier'),
-                                  ('REPLICATION', 'identifier'),
-                                  ('=', 'op'),
-                                  ('{', 'brackets'),
-                                  ("'class'", 'quotedStringLiteral'),
-                                  (':', 'colon'),
-                                  ("'NetworkTopologyStrategy'",
+                                 [(b'CREATE', 'reserved_identifier'),
+                                  (b'KEYSPACE', 'reserved_identifier'),
+                                  (b'"Cql_test_KS"', 'quotedName'),
+                                  (b'WITH', 'reserved_identifier'),
+                                  (b'REPLICATION', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'{', 'brackets'),
+                                  (b"'class'", 'quotedStringLiteral'),
+                                  (b':', 'colon'),
+                                  (b"'NetworkTopologyStrategy'",
                                    'quotedStringLiteral'),
-                                  (',', 'op'),
-                                  ("'dc1'", 'quotedStringLiteral'),
-                                  (':', 'colon'),
-                                  ('3', 'wholenumber'),
-                                  (',', 'op'),
-                                  ("'dc2'", 'quotedStringLiteral'),
-                                  (':', 'colon'),
-                                  ('2', 'wholenumber'),
-                                  ('}', 'brackets'),
-                                  (';', 'endtoken')])
+                                  (b',', 'op'),
+                                  (b"'dc1'", 'quotedStringLiteral'),
+                                  (b':', 'colon'),
+                                  (b'3', 'wholenumber'),
+                                  (b',', 'op'),
+                                  (b"'dc2'", 'quotedStringLiteral'),
+                                  (b':', 'colon'),
+                                  (b'2', 'wholenumber'),
+                                  (b'}', 'brackets'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "CREATE KEYSPACE ks WITH REPLICATION = "
             "{'class': 'NetworkTopologyStrategy', 'dc1': 3} AND "
             "DURABLE_WRITES = false;")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('CREATE', 'reserved_identifier'),
-                                  ('KEYSPACE', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  ('WITH', 'reserved_identifier'),
-                                  ('REPLICATION', 'identifier'),
-                                  ('=', 'op'),
-                                  ('{', 'brackets'),
-                                  ("'class'", 'quotedStringLiteral'),
-                                  (':', 'colon'),
-                                  ("'NetworkTopologyStrategy'",
+                                 [(b'CREATE', 'reserved_identifier'),
+                                  (b'KEYSPACE', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b'WITH', 'reserved_identifier'),
+                                  (b'REPLICATION', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'{', 'brackets'),
+                                  (b"'class'", 'quotedStringLiteral'),
+                                  (b':', 'colon'),
+                                  (b"'NetworkTopologyStrategy'",
                                    'quotedStringLiteral'),
-                                  (',', 'op'),
-                                  ("'dc1'", 'quotedStringLiteral'),
-                                  (':', 'colon'),
-                                  ('3', 'wholenumber'),
-                                  ('}', 'brackets'),
-                                  ('AND', 'reserved_identifier'),
+                                  (b',', 'op'),
+                                  (b"'dc1'", 'quotedStringLiteral'),
+                                  (b':', 'colon'),
+                                  (b'3', 'wholenumber'),
+                                  (b'}', 'brackets'),
+                                  (b'AND', 'reserved_identifier'),
                                   # 'DURABLE_WRITES' is not a keyword
-                                  ('DURABLE_WRITES', 'identifier'),
-                                  ('=', 'op'),
-                                  ('false', 'identifier'),
-                                  (';', 'endtoken')])
+                                  (b'DURABLE_WRITES', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'false', 'identifier'),
+                                  (b';', 'endtoken')])
 
     def test_parse_drop_keyspace(self):
         parsed = parse_cqlsh_statements(
             'DROP KEYSPACE ks;')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('DROP', 'reserved_identifier'),
-                                  ('KEYSPACE', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  (';', 'endtoken')])
+                                 [(b'DROP', 'reserved_identifier'),
+                                  (b'KEYSPACE', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             'DROP SCHEMA ks;')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('DROP', 'reserved_identifier'),
-                                  ('SCHEMA', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  (';', 'endtoken')])
+                                 [(b'DROP', 'reserved_identifier'),
+                                  (b'SCHEMA', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             'DROP KEYSPACE IF EXISTS "My_ks";')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('DROP', 'reserved_identifier'),
-                                  ('KEYSPACE', 'reserved_identifier'),
-                                  ('IF', 'reserved_identifier'),
-                                  ('EXISTS', 'identifier'),
-                                  ('"My_ks"', 'quotedName'),
-                                  (';', 'endtoken')])
+                                 [(b'DROP', 'reserved_identifier'),
+                                  (b'KEYSPACE', 'reserved_identifier'),
+                                  (b'IF', 'reserved_identifier'),
+                                  (b'EXISTS', 'identifier'),
+                                  (b'"My_ks"', 'quotedName'),
+                                  (b';', 'endtoken')])
 
     def test_parse_create_table(self):
         pass
@@ -584,126 +584,125 @@ class TestCqlParsing(TestCase):
         parsed = parse_cqlsh_statements(
             'CREATE INDEX idx ON ks.tab (i);')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 (('CREATE', 'reserved_identifier'),
-                                  ('INDEX', 'reserved_identifier'),
-                                  ('idx', 'identifier'),
-                                  ('ON', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  ('.', 'op'),
-                                  ('tab', 'identifier'),
-                                  ('(', 'op'),
-                                  ('i', 'identifier'),
-                                  (')', 'op'),
-                                  (';', 'endtoken')))
+                                 ((b'CREATE', 'reserved_identifier'),
+                                  (b'INDEX', 'reserved_identifier'),
+                                  (b'idx', 'identifier'),
+                                  (b'ON', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b'.', 'op'),
+                                  (b'tab', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'i', 'identifier'),
+                                  (b')', 'op'),
+                                  (b';', 'endtoken')))
 
         parsed = parse_cqlsh_statements(
             'CREATE INDEX idx ON ks.tab (i) IF NOT EXISTS;')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 (('CREATE', 'reserved_identifier'),
-                                  ('INDEX', 'reserved_identifier'),
-                                  ('idx', 'identifier'),
-                                  ('ON', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  ('.', 'op'),
-                                  ('tab', 'identifier'),
-                                  ('(', 'op'),
-                                  ('i', 'identifier'),
-                                  (')', 'op'),
-                                  ('IF', 'reserved_identifier'),
-                                  ('NOT', 'reserved_identifier'),
-                                  ('EXISTS', 'identifier'),
-                                  (';', 'endtoken')))
+                                 ((b'CREATE', 'reserved_identifier'),
+                                  (b'INDEX', 'reserved_identifier'),
+                                  (b'idx', 'identifier'),
+                                  (b'ON', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b'.', 'op'),
+                                  (b'tab', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'i', 'identifier'),
+                                  (b')', 'op'),
+                                  (b'IF', 'reserved_identifier'),
+                                  (b'NOT', 'reserved_identifier'),
+                                  (b'EXISTS', 'identifier'),
+                                  (b';', 'endtoken')))
 
         parsed = parse_cqlsh_statements(
             'CREATE INDEX idx ON tab (KEYS(i));')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 (('CREATE', 'reserved_identifier'),
-                                  ('INDEX', 'reserved_identifier'),
-                                  ('idx', 'identifier'),
-                                  ('ON', 'reserved_identifier'),
-                                  ('tab', 'identifier'),
-                                  ('(', 'op'),
-                                  ('KEYS', 'identifier'),
-                                  ('(', 'op'),
-                                  ('i', 'identifier'),
-                                  (')', 'op'),
-                                  (')', 'op'),
-                                  (';', 'endtoken')))
+                                 ((b'CREATE', 'reserved_identifier'),
+                                  (b'INDEX', 'reserved_identifier'),
+                                  (b'idx', 'identifier'),
+                                  (b'ON', 'reserved_identifier'),
+                                  (b'tab', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'KEYS', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'i', 'identifier'),
+                                  (b')', 'op'),
+                                  (b')', 'op'),
+                                  (b';', 'endtoken')))
 
         parsed = parse_cqlsh_statements(
             'CREATE INDEX idx ON ks.tab FULL(i);')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('CREATE', 'reserved_identifier'),
-                                  ('INDEX', 'reserved_identifier'),
-                                  ('idx', 'identifier'),
-                                  ('ON', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  ('.', 'op'),
-                                  ('tab', 'identifier'),
-                                  ('FULL', 'reserved_identifier'),
-                                  ('(', 'op'),
-                                  ('i', 'identifier'),
-                                  (')', 'op'),
-                                  (';', 'endtoken')])
+                                 [(b'CREATE', 'reserved_identifier'),
+                                  (b'INDEX', 'reserved_identifier'),
+                                  (b'idx', 'identifier'),
+                                  (b'ON', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b'.', 'op'),
+                                  (b'tab', 'identifier'),
+                                  (b'FULL', 'reserved_identifier'),
+                                  (b'(', 'op'),
+                                  (b'i', 'identifier'),
+                                  (b')', 'op'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             'CREATE CUSTOM INDEX idx ON ks.tab (i);')
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('CREATE', 'reserved_identifier'),
-                                  ('CUSTOM', 'identifier'),
-                                  ('INDEX', 'reserved_identifier'),
-                                  ('idx', 'identifier'),
-                                  ('ON', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  ('.', 'op'),
-                                  ('tab', 'identifier'),
-                                  ('(', 'op'),
-                                  ('i', 'identifier'),
-                                  (')', 'op'),
-                                  (';', 'endtoken')])
+                                 [(b'CREATE', 'reserved_identifier'),
+                                  (b'CUSTOM', 'identifier'),
+                                  (b'INDEX', 'reserved_identifier'),
+                                  (b'idx', 'identifier'),
+                                  (b'ON', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b'.', 'op'),
+                                  (b'tab', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'i', 'identifier'),
+                                  (b')', 'op'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "CREATE INDEX idx ON ks.tab (i) USING "
             "'org.custom.index.MyIndexClass';")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('CREATE', 'reserved_identifier'),
-                                  ('INDEX', 'reserved_identifier'),
-                                  ('idx', 'identifier'),
-                                  ('ON', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  ('.', 'op'),
-                                  ('tab', 'identifier'),
-                                  ('(', 'op'),
-                                  ('i', 'identifier'),
-                                  (')', 'op'),
-                                  ('USING', 'reserved_identifier'),
-                                  ("'org.custom.index.MyIndexClass'",
-                                   'quotedStringLiteral'),
-                                  (';', 'endtoken')])
+                                 [(b'CREATE', 'reserved_identifier'),
+                                  (b'INDEX', 'reserved_identifier'),
+                                  (b'idx', 'identifier'),
+                                  (b'ON', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b'.', 'op'),
+                                  (b'tab', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'i', 'identifier'),
+                                  (b')', 'op'),
+                                  (b'USING', 'reserved_identifier'),
+                                  (b"'org.custom.index.MyIndexClass'", 'quotedStringLiteral'),
+                                  (b';', 'endtoken')])
 
         parsed = parse_cqlsh_statements(
             "CREATE INDEX idx ON ks.tab (i) WITH OPTIONS = "
             "{'storage': '/mnt/ssd/indexes/'};")
         self.assertSequenceEqual(tokens_with_types(parsed),
-                                 [('CREATE', 'reserved_identifier'),
-                                  ('INDEX', 'reserved_identifier'),
-                                  ('idx', 'identifier'),
-                                  ('ON', 'reserved_identifier'),
-                                  ('ks', 'identifier'),
-                                  ('.', 'op'),
-                                  ('tab', 'identifier'),
-                                  ('(', 'op'),
-                                  ('i', 'identifier'),
-                                  (')', 'op'),
-                                  ('WITH', 'reserved_identifier'),
-                                  ('OPTIONS', 'identifier'),
-                                  ('=', 'op'),
-                                  ('{', 'brackets'),
-                                  ("'storage'", 'quotedStringLiteral'),
-                                  (':', 'colon'),
-                                  ("'/mnt/ssd/indexes/'", 'quotedStringLiteral'),
-                                  ('}', 'brackets'),
-                                  (';', 'endtoken')])
+                                 [(b'CREATE', 'reserved_identifier'),
+                                  (b'INDEX', 'reserved_identifier'),
+                                  (b'idx', 'identifier'),
+                                  (b'ON', 'reserved_identifier'),
+                                  (b'ks', 'identifier'),
+                                  (b'.', 'op'),
+                                  (b'tab', 'identifier'),
+                                  (b'(', 'op'),
+                                  (b'i', 'identifier'),
+                                  (b')', 'op'),
+                                  (b'WITH', 'reserved_identifier'),
+                                  (b'OPTIONS', 'identifier'),
+                                  (b'=', 'op'),
+                                  (b'{', 'brackets'),
+                                  (b"'storage'", 'quotedStringLiteral'),
+                                  (b':', 'colon'),
+                                  (b"'/mnt/ssd/indexes/'", 'quotedStringLiteral'),
+                                  (b'}', 'brackets'),
+                                  (b';', 'endtoken')])
 
     def test_parse_drop_index(self):
         pass

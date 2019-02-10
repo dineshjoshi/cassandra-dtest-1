@@ -18,6 +18,7 @@ from __future__ import print_function
 # code for dealing with CQL's syntax, rules, interpretation
 # i.e., stuff that's not necessarily cqlsh-specific
 
+from builtins import filter
 import traceback
 from cassandra.metadata import cql_keywords_reserved
 from . import pylexotron, util
@@ -109,7 +110,7 @@ class CqlParsingRuleSet(pylexotron.ParsingRuleSet):
             # operations on tokens (like .lower()).  See CASSANDRA-9083
             # for one example of this.
             str_token = t[1]
-            if isinstance(str_token, unicode):
+            if isinstance(str_token, str):
                 try:
                     str_token = str_token.encode('ascii')
                     t = (t[0], str_token) + t[2:]
@@ -205,7 +206,7 @@ class CqlParsingRuleSet(pylexotron.ParsingRuleSet):
             f = lambda s: s and dequoter(s).lower().startswith(partial)
         else:
             f = lambda s: s and dequoter(s).startswith(partial)
-        candidates = filter(f, strcompletes)
+        candidates = list(filter(f, strcompletes))
 
         if prefix is not None:
             # dequote, re-escape, strip quotes: gets us the right quoted text
@@ -216,7 +217,7 @@ class CqlParsingRuleSet(pylexotron.ParsingRuleSet):
 
             # the above process can result in an empty string; this doesn't help for
             # completions
-            candidates = filter(None, candidates)
+            candidates = [_f for _f in candidates if _f]
 
         # prefix a space when desirable for pleasant cql formatting
         if tokens:

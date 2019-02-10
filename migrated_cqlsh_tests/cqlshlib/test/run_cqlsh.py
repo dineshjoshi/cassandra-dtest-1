@@ -148,7 +148,7 @@ class ProcRunner:
             os.close(slavefd)
             self.childpty = masterfd
             self.send = self.send_tty
-            self.read = self.read_tty
+            self._read = self.read_tty
         else:
             stdin = stdout = subprocess.PIPE
             stderr = subprocess.STDOUT
@@ -158,9 +158,13 @@ class ProcRunner:
             self.send = self.send_pipe
             if self.tty:
                 self.winpty = WinPty(self.proc.stdout)
-                self.read = self.read_winpty
+                self._read = self.read_winpty
             else:
-                self.read = self.read_pipe
+                self._read = self.read_pipe
+
+    def read(self, *args, **kwargs):
+        val = self._read(*args, **kwargs)
+        return val.decode('utf-8')
 
     def close(self):
         cqlshlog.info("Closing %r subprocess." % (self.exe_path,))
@@ -172,7 +176,7 @@ class ProcRunner:
         return self.proc.wait()
 
     def send_tty(self, data):
-        os.write(self.childpty, data)
+        os.write(self.childpty, bytearray(data, 'utf-8'))
 
     def send_pipe(self, data):
         self.proc.stdin.write(data)

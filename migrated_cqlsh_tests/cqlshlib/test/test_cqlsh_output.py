@@ -20,7 +20,6 @@
 from __future__ import with_statement
 
 import re
-from itertools import izip
 from .basecase import (BaseTestCase, cqlshlog, dedent, at_a_time,
                        TEST_HOST, TEST_PORT)
 from .cassconnect import (get_keyspace, testrun_cqlsh, testcall_cqlsh,
@@ -57,7 +56,7 @@ class TestCqlshOutput(BaseTestCase):
                                      % (coloredtext, num, lookup_colorname(ccolor), colorname))
 
     def assertColorFromTags(self, coloredtext, tags):
-        for (char, tag) in izip(coloredtext, tags):
+        for (char, tag) in zip(coloredtext, tags):
             if char.isspace():
                 continue
             if tag.isspace():
