@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -32,7 +33,7 @@ def is_win():
     return sys.platform in ("cygwin", "win32")
 
 if is_win():
-    from winpty import WinPty
+    from .winpty import WinPty
     DEFAULT_PREFIX = ''
 else:
     import pty
@@ -103,7 +104,7 @@ def timing_out_alarm(seconds):
 if is_win():
     try:
         import eventlet
-    except ImportError, e:
+    except ImportError as e:
         sys.exit("evenlet library required to run cqlshlib tests on Windows")
 
     def timing_out(seconds):
